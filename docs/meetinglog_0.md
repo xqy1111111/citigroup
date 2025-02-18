@@ -49,6 +49,8 @@
 
 请不要在main/master分支直接修改，在自己的branch完善后再merge进来
 
+push之前请先拉取解决冲突，不要污染main/master分支
+
 
 <a id="orgd9fab89"></a>
 
