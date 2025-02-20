@@ -1,0 +1,46 @@
+.navigation-bar {
+  width: 48px;
+  background-color: #333333;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-items {
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
+}
+
+.nav-item {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.nav-item:hover {
+  background-color: #2a2a2a;
+}
+
+.nav-item.active {
+  border-left: 2px solid #fff;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #fff;
+}
+
+.icon-files::before { content: "📁"; }
+.icon-search::before { content: "🔍"; }
+.icon-git::before { content: "📦"; }
+.icon-debug::before { content: "🐛"; }
+.icon-extensions::before { content: "🧩"; } 

@@ -1,0 +1,23 @@
+.menubar {
+  height: 30px;
+  background-color: #333333;
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  user-select: none;
+}
+
+.menu-items {
+  display: flex;
+  gap: 20px;
+}
+
+.menu-item {
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  opacity: 0.8;
+} 
