@@ -1,0 +1,145 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+}
+
+.content {
+  flex: 1;
+  background-color: #1e1e1e;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.content-header {
+  margin-bottom: 24px;
+}
+
+.content-header h1 {
+  color: #cccccc;
+  font-size: 24px;
+  font-weight: normal;
+}
+
+.info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.table-section {
+  background-color: #2d2d2d;
+  border: 1px solid #404040;
+  border-radius: 4px;
+}
+
+.table-header {
+  padding: 16px;
+  border-bottom: 1px solid #404040;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-header h3 {
+  color: #cccccc;
+  font-size: 16px;
+  font-weight: normal;
+  margin: 0;
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.table-action {
+  background-color: transparent;
+  border: 1px solid #404040;
+  color: #8c8c8c;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.table-action:hover {
+  background-color: #404040;
+  color: #ffffff;
+}
+
+.table-container {
+  padding: 16px;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #cccccc;
+}
+
+th {
+  text-align: left;
+  padding: 12px;
+  font-weight: normal;
+  color: #8c8c8c;
+  border-bottom: 1px solid #404040;
+}
+
+td {
+  padding: 12px;
+  border-bottom: 1px solid #363636;
+}
+
+tr:hover {
+  background-color: #2a2a2a;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.status-badge.运行中 {
+  background-color: #294929;
+  color: #4ec9b0;
+}
+
+.status-badge.已完成 {
+  background-color: #1a4a4a;
+  color: #3794ff;
+}
+
+.status-badge.暂停 {
+  background-color: #4a3a1a;
+  color: #cca700;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background-color: #363636;
+  border-radius: 2px;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #4ec9b0;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}

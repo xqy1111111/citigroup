@@ -1,0 +1,74 @@
+.sidebar {
+  width: 250px;
+  background-color: #252526;
+  color: white;
+  padding: 10px 0;
+  user-select: none;
+}
+
+.sidebar-title {
+  padding: 0 20px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  color: #8c8c8c;
+}
+
+.sidebar-section {
+  margin-bottom: 10px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  padding: 3px 20px;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #8c8c8c;
+  cursor: pointer;
+}
+
+.section-header:hover {
+  color: #ffffff;
+}
+
+.section-arrow {
+  font-size: 10px;
+  margin-right: 5px;
+}
+
+.section-content {
+  margin-top: 4px;
+}
+
+.file-entry, .folder-entry {
+  display: flex;
+  align-items: center;
+  padding: 3px 20px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #cccccc;
+}
+
+.file-entry:hover, .folder-entry:hover {
+  background-color: #2a2a2a;
+}
+
+.file-entry.active {
+  background-color: #37373d;
+}
+
+.file-entry i, .folder-entry i {
+  margin-right: 5px;
+}
+
+.folder-arrow {
+  font-size: 10px;
+  margin-right: 5px;
+  width: 10px;
+}
+
+.indent {
+  padding-left: 45px;
+} 
