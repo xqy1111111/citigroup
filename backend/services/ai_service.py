@@ -53,7 +53,7 @@ class AIService:
         """
         messages = [Message(sayer="user", text=user_message)]
         return await self.get_ai_response(messages)
-    async def chat_with_history(self, messages: List[Message]) -> str:
+    async def chat_with_history(self, messages: List[Message]) -> List[List[str]]:
         """
         基于历史消息的对话接口
         
@@ -79,11 +79,15 @@ if __name__ == "__main__":
         ai_service = AIService()
         responses = []
         message = []
-        message.append(Message(sayer="user", text="李白是谁"))
+        message.append(Message(sayer="user", text="施瓦辛格是谁"))
 
         message.append(Message(sayer="user",text="我刚才问了什么问题"))
         responses.append(await ai_service.chat_with_history(message))
-        print(responses)
+        print(type(responses))
+        for response_list in responses:
+            for response in response_list:
+                print(type(response))
+                print(response)
 
     asyncio.run(main())
 
