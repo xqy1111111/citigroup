@@ -50,19 +50,31 @@ async def login_user(
 @router.get("/{user_id}/repos", response_model=List[Repo])
 async def get_user_repos(user_id: str):
     """获取用户的所有仓库"""
+    # 根据 user_id 获取用户的所有仓库
+
+    # 返回用户的所有仓库
     pass
 
 @router.get("/{user_id}/owned-repos", response_model=List[Repo])
 async def get_owned_repos(user_id: str):
     """获取用户拥有的仓库"""
+    # 根据 user_id 获取用户拥有的仓库
+
+    # 返回用户的所有仓库
     pass
 
 @router.get("/{user_id}/collaborated-repos", response_model=List[Repo])
 async def get_collaborated_repos(user_id: str):
     """获取用户参与协作的仓库"""
+    # 根据 user_id 获取用户参与协作的仓库
+
+    # 返回用户的所有仓库
     pass
 
 @router.get("/{user_id}/me", response_model=User)
 async def read_users_me(user_id: str):
     """获取当前用户信息"""
+    # 根据 user_id 获取当前用户信息
+
+    # 返回当前用户信息
     pass 
