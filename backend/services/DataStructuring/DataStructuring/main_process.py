@@ -11,13 +11,13 @@ def main_process():
     # 获取当前文件的绝对路径
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    SourcePath="./SourceData/"
+    SourcePath="./SourceData"
     SourcePath=os.path.join(current_dir,SourcePath)
-    TextPath="./TextData/"
+    TextPath="./TextData"
     TextPath=os.path.join(current_dir,TextPath)
-    Input_for_ShenZijun_Path="./InputData_for_ShenZijun/"
+    Input_for_ShenZijun_Path="./InputData_for_ShenZijun"
     Input_for_ShenZijun_Path=os.path.join(current_dir,Input_for_ShenZijun_Path)
-    TargetPath="./TargetData/"
+    TargetPath="./TargetData"
     TargetPath=os.path.join(current_dir,TargetPath)
 
     # 将部分文件夹清空
@@ -27,10 +27,13 @@ def main_process():
     # 将SourcePath文件提取文字并放入TextPath当中
     ProcessData(SourcePath,TextPath)
 
-    # 对每个txt文件进行问询其结构化程度如何
-    Classify(TextPath,Input_for_ShenZijun_Path)
+    print(TextPath)
+    print("--------------------------------应该已经完成了传进txt--------------------------------")
 
-    #结构化所有数据
-    txt_to_excel(Input_for_ShenZijun_Path,TargetPath)
+    # # 对每个txt文件进行问询其结构化程度如何
+    # Classify(TextPath,Input_for_ShenZijun_Path)
+
+    # #结构化所有数据
+    # txt_to_excel(Input_for_ShenZijun_Path,TargetPath)
 
 

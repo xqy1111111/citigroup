@@ -23,6 +23,7 @@ def ProcessData(SourcePath,TextPath):
     #使用pathlib模块访问目录下的所有文件
     path = Path(SourcePath)
     for filepath in path.rglob('*'):#使用了Path.rglob()方法，它可以递归地查找给定模式（在这个例子中是所有文件'*'）的所有文件路径
+        print(f"\n*** for debug: filepath: {filepath}")
         if not filepath.is_file():#如果某个路径对应的不是文件的话那就continue好了 检查每个路径是否是文件，并在找到文件时打印出文件路径。
             print(f"路径{filepath}对应的不是文件")
             continue
@@ -40,8 +41,10 @@ def ProcessData(SourcePath,TextPath):
         if not content:
             print(f"抱歉，文件{filepath}其内容为空")
             continue
-        NewPath = str(filepath).replace(str(SourcePath), str(TextPath))
+        NewPath = str(filepath).replace(str(SourcePath.split("/")[-1]), str(TextPath.split("/")[-1]))
+        print(f"\n*** for debug: NewPath1: {NewPath}")
         NewPath = pattern_substitute(NewPath,suffix=".txt") #该函数位于 MyFunctions.py 内部
+        print(f"\n*** for debug: NewPath2: {NewPath}")
         print(f"新的路径为:{NewPath}")
         write_to_txt_os(NewPath, content = content)
     return
