@@ -42,7 +42,8 @@
   margin-top: 4px;
 }
 
-.file-entry, .folder-entry {
+.file-entry,
+.folder-entry {
   display: flex;
   align-items: center;
   padding: 3px 20px;
@@ -51,7 +52,8 @@
   color: #cccccc;
 }
 
-.file-entry:hover, .folder-entry:hover {
+.file-entry:hover,
+.folder-entry:hover {
   background-color: #2a2a2a;
 }
 
@@ -59,7 +61,8 @@
   background-color: #37373d;
 }
 
-.file-entry i, .folder-entry i {
+.file-entry i,
+.folder-entry i {
   margin-right: 5px;
 }
 
@@ -71,4 +74,4 @@
 
 .indent {
   padding-left: 45px;
-} 
+}

@@ -1,5 +1,6 @@
 import React from "react";
 import "./Sidebar.css";
+import "../../styles/icons.css";
 
 export const Sidebar = () => {
   return (
@@ -21,7 +22,7 @@ export const Sidebar = () => {
           </div>
         </div>
       </div>
-      
+
       <div className="sidebar-section">
         <div className="section-header">
           <span className="section-arrow">▼</span>
