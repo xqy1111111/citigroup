@@ -30,10 +30,10 @@ def main_process():
     print(TextPath)
     print("--------------------------------应该已经完成了传进txt--------------------------------")
 
-    # # 对每个txt文件进行问询其结构化程度如何
-    # Classify(TextPath,Input_for_ShenZijun_Path)
+    # 对每个txt文件进行问询其结构化程度如何
+    Classify(TextPath,Input_for_ShenZijun_Path)
 
-    # #结构化所有数据
-    # txt_to_excel(Input_for_ShenZijun_Path,TargetPath)
+    #结构化所有数据
+    txt_to_excel(Input_for_ShenZijun_Path,TargetPath)
 
 

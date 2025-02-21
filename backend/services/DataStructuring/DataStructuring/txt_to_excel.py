@@ -34,7 +34,10 @@ def txt_to_excel(folder_path,output_path):
                             # print(content)
                             print('处理',file)
                             print('----------------------------------------------')
-                            target=pd.read_excel('表头初版汇总.xlsx')
+                            # 获取表头出版汇总 的 绝对路径
+                            current_dir = os.path.dirname(os.path.abspath(__file__))
+                            target_file=os.path.join(current_dir,'./表头初版汇总.xlsx')
+                            target=pd.read_excel(target_file)
                             print(target)
                             for context in all:
                                 print('处理',context,'指标')
@@ -112,11 +115,16 @@ def txt_to_excel(folder_path,output_path):
                             #     print("成功填写")
                             # response=get_ollama_response(f"请基于{content}回答以下列表中每一项的信息{all}")
                             # print(response)
-                            target_file=output_path+file[:-3]+'xlsx'
+
+                            target_file=output_path+'\\'+file[:-3]+'xlsx'
+                            print("----------------------------------------------\n")
+                            print(f"\n*** for debug: target_file: {target_file}")
                             target.to_excel(target_file,index=False)
+                            print("----------------------------------------------\n")
                             txt_contents.append(content)
                     except Exception as e:
                         print(f"读取文件 {file_path} 时出错: {e}")
+        print(txt_contents)                
         return txt_contents
 
     def get_ollama_response(prompt):
