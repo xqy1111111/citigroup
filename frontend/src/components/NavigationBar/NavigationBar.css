@@ -38,9 +38,3 @@
   width: 2px;
   background-color: #fff;
 }
-
-.icon-files::before { content: "📁"; }
-.icon-search::before { content: "🔍"; }
-.icon-git::before { content: "📦"; }
-.icon-debug::before { content: "🐛"; }
-.icon-extensions::before { content: "🧩"; } 

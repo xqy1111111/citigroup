@@ -1,5 +1,6 @@
 import React from "react";
 import "./NavigationBar.css";
+import "../../styles/icons.css";
 
 export const NavigationBar = () => {
   return (
