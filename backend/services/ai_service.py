@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 import requests
-from ..models.chat import Message
+from backend.models.chat import Message
 
 class AIService:
     def __init__(self):
@@ -53,3 +53,26 @@ class AIService:
         """
         messages = [Message(sayer="user", text=user_message)]
         return await self.get_ai_response(messages) 
+    
+
+
+
+##测试代码
+import asyncio
+
+if __name__ == "__main__":
+    async def main():
+        ai_service = AIService()
+        response = await ai_service.chat("李白是谁")
+        print(response)
+
+    asyncio.run(main())
+
+
+
+
+
+
+
+
+
