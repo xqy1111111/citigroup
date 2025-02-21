@@ -48,7 +48,7 @@ def write_to_txt_os(filepath, content):
         dir_path = os.path.dirname(filepath)
         if dir_path:
             os.makedirs(dir_path, exist_ok=True)  # 确保父目录存在
-        with open(filepath, 'w') as file:
+        with open(filepath, 'w', encoding='utf-8') as file:
             file.write(content)
         print(f"文件 {filepath} 已成功创建并写入内容。")
     except Exception as e:
@@ -59,7 +59,7 @@ def write_to_txt_os(filepath, content):
 def create_file(filepath):
     try:
         # 以写入模式打开文件，如果文件不存在会创建文件
-        with open(filepath, 'w') as file:
+        with open(filepath, 'w', encoding='utf-8') as file:
             pass  # 这里不进行写入操作，仅创建文件
         print(f"文件 {filepath} 已成功创建。")
     except Exception as e:
