@@ -18,7 +18,7 @@ async def chat(message: str):
     pass
 
 
-@router.post("/with-file")
+@router.post("/with-file", response_model=Message)
 async def chat_with_file(message: str, file: UploadFile = File(...)):
     """带文件的聊天消息"""
     pass

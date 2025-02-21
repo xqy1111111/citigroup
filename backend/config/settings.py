@@ -6,7 +6,7 @@ from pymongo.database import Database
 class Settings(BaseSettings):
     # 数据库配置
     MONGODB_URL: str = "mongodb://localhost:27017"
-    DATABASE_NAME: str = "code_repo_db"
+    DATABASE_NAME: str = "your_database_name"
     
     # JWT配置
     SECRET_KEY: str = "your-secret-key"
@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     # 文件处理配置
     SOURCE_DATA_DIR: str = "DataStructuring/DataStructuring/SourceData"
     TARGET_DATA_DIR: str = "DataStructuring/DataStructuring/TargetData"
+    
+    # 文件存储设置
+    UPLOAD_DIR: str = "uploads"
+    MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB
     
     # MongoDB客户端和数据库实例
     _mongodb_client: Optional[MongoClient] = None

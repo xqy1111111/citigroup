@@ -43,4 +43,14 @@ class Database:
     @classmethod
     def get_db(cls):
         """获取数据库实例"""
-        return cls.client[settings.DATABASE_NAME] 
+        return cls.client[settings.DATABASE_NAME]
+
+async def connect_to_mongo():
+    Database.client = AsyncIOMotorClient(settings.MONGODB_URL)
+    
+async def close_mongo_connection():
+    if Database.client:
+        Database.client.close()
+
+def get_database() -> AsyncIOMotorClient:
+    return Database.client[settings.DATABASE_NAME] 
