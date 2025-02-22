@@ -16,12 +16,11 @@ class FileMetadata(BaseModel):
 
 # 文件上传请求模型
 class FileUpload(BaseModel):
+    repo_id: str  # 仓库 ID
     filename: str  # 文件名
-    file_obj: bytes  # 文件内容（以二进制流上传）
     source: bool = True  # 如果 source=True 则更新 files 列表，否则更新 results 列表
 
 # 文件状态更新请求模型
 class FileStatusUpdate(BaseModel):
     status: str  # 文件的新状态，默认为 "complete"
     source: bool = True  # 如果 source=True，则更新 files，否则更新 results
-
