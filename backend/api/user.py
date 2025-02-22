@@ -57,16 +57,3 @@ def objectID2str(user):
     )
     return user_response
     
-# # 获取用户信息路由
-# @router.get("/{user_id}", response_model=UserResponse)
-# async def get_user(user_id: str):
-#     """
-#     通过user_id获得用户的信息
-#     :param user_id: 就是user的 _id
-#     :return: 如果成功，则返回user:UserResponse
-#              否则返回status_code:404
-#     """
-#     user = get_user_by_id(user_id)
-#     if not user:
-#         raise HTTPException(status_code=404, detail="User not found")
-#     return user
