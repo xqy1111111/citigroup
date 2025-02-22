@@ -31,6 +31,8 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
     """
     处理带文件的聊天请求
     """
+    print("\n\n\n")
+    print(file)
     # 保存上传的文件到指定文件夹
     print("\n\n\n")
     print(platform.system())
@@ -42,6 +44,7 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
         parent_dir = os.path.dirname(current_file_path)
         parent_dir = os.path.dirname(parent_dir)
         upload_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "SourceData")
+        json_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "JsonData")
         print("\n\n\n")
         print(upload_folder)
         print("\n\n\n")
@@ -52,26 +55,26 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
         parent_dir = os.path.dirname(current_file_path)
         parent_dir = os.path.dirname(parent_dir)
         upload_folder = os.path.join("..", parent_dir, "services", "DataStructuring", "DataStructuring", "SourceData")
+        json_folder = os.path.join("..", parent_dir, "services", "DataStructuring", "DataStructuring", "JsonData")
     
     file_path = os.path.join(upload_folder, file.filename)
     # print("\n***file_path: ", file_path)
     
     # 删除file_path 下的所有文件
-    if os.path.exists(file_path):
-        for file in os.listdir(file_path):
-            os.remove(os.path.join(file_path, file))
+    if os.path.exists(upload_folder):
+        for file_name in os.listdir(upload_folder):
+            os.remove(os.path.join(upload_folder, file_name))
 
     with open(file_path, "wb") as buffer:
-        await shutil.copyfileobj(file.file, buffer)
+        shutil.copyfileobj(file.file, buffer)
     
     # 这里需要添加文件处理逻辑
-    await main_process()
-    await target_to_json()
-    if platform.system() == "Windows":
-        json_folder = "..\\services\\DataStructuring\\DataStructuring\\JsonData"
-        json_folder = "..\\services\\DataStructuring\\DataStructuring\\JsonData"
-    else:
-        json_folder = "..\\services\\DataStructuring\\DataStructuring\\JsonData"
+    main_process.main_process()
+    # 清空json文件夹
+    if os.path.exists(json_folder):
+        for file_name in os.listdir(json_folder):
+            os.remove(os.path.join(json_folder, file_name))
+    target_to_json.process_target_to_json()
     
    
     # 获取json_folder文件夹里所有文件的内容

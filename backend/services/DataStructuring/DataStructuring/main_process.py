@@ -6,7 +6,7 @@ from .txt_to_excel import *
 # 注意：在运行之前，请保证SourceData文件夹下其余文件已经被清空，需要处理的文件才在里面
 
 # if __name__=="__main__":
-async def main_process():
+def main_process():
     # 使用相对路径：
     # 获取当前文件的绝对路径
     current_dir = os.path.dirname(os.path.abspath(__file__))
