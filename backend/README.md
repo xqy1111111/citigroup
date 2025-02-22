@@ -407,6 +407,7 @@ POST /api/repo/60f1c9a6d4f7e8144d2c9f45/collaborators
 ```http
 POST /api/file/upload?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
 Content-Type: multipart/form-data
+```
 
 ### **响应**
 #### **成功**
