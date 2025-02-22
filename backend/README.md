@@ -11,7 +11,7 @@
 ## 1. 创建用户
 
 ### **接口**
-**POST** `/api/user/`
+**POST** `/user/`
 
 ### **请求参数**
 ```json
@@ -54,7 +54,7 @@
 ## 2. 用户认证（登录）
 
 ### **接口**
-**POST** `/api/user/authenticate/`
+**POST** `/user/authenticate/`
 
 ### **请求参数**
 ```json
@@ -88,7 +88,7 @@
 ## 3. 获取用户信息
 
 ### **接口**
-**GET** `/api/user/{user_id}`
+**GET** `/user/{user_id}`
 
 ### **路径参数**
 | 参数名 | 类型 | 是否必填 | 说明 |
@@ -139,7 +139,7 @@ GET /api/user/65dbf5b67a2f4d8e8b4c9f9d
 # 仓库相关 API 文档
 
 ## 基础信息
-- **API 前缀**：`/api/repo`
+- **API 前缀**：`/repo`
 - **请求格式**：JSON
 - **响应格式**：JSON
 - **认证方式**：部分接口需要提供用户认证信息
@@ -149,7 +149,7 @@ GET /api/user/65dbf5b67a2f4d8e8b4c9f9d
 ## 1. 创建仓库
 
 ### **接口**
-**POST** `/api/repo/`
+**POST** `/repo/`
 
 ### **请求参数**
 ```json
@@ -165,7 +165,7 @@ GET /api/user/65dbf5b67a2f4d8e8b4c9f9d
 
 ### **示例请求**
 ```http
-POST /api/repo/?owner_id=65dbf5b67a2f4d8e8b4c9f9d
+POST /repo/?owner_id=65dbf5b67a2f4d8e8b4c9f9d
 ```
 ```json
 {
@@ -203,7 +203,7 @@ POST /api/repo/?owner_id=65dbf5b67a2f4d8e8b4c9f9d
 ## 2. 获取仓库信息
 
 ### **接口**
-**GET** `/api/repo/{repo_id}`
+**GET** `/repo/{repo_id}`
 
 ### **路径参数**
 | 参数名 | 类型 | 是否必填 | 说明 |
@@ -212,7 +212,7 @@ POST /api/repo/?owner_id=65dbf5b67a2f4d8e8b4c9f9d
 
 ### **示例请求**
 ```http
-GET /api/repo/60f1c9a6d4f7e8144d2c9f45
+GET /repo/60f1c9a6d4f7e8144d2c9f45
 ```
 
 ### **响应**
@@ -238,7 +238,7 @@ GET /api/repo/60f1c9a6d4f7e8144d2c9f45
 ## 3. 更新仓库名称
 
 ### **接口**
-**PUT** `/api/repo/{repo_id}/name`
+**PUT** `/repo/{repo_id}/name`
 
 ### **请求参数**
 ```json
@@ -251,7 +251,7 @@ GET /api/repo/60f1c9a6d4f7e8144d2c9f45
 
 ### **示例请求**
 ```http
-PUT /api/repo/60f1c9a6d4f7e8144d2c9f45/name
+PUT /repo/60f1c9a6d4f7e8144d2c9f45/name
 ```
 ```json
 {
@@ -274,7 +274,7 @@ PUT /api/repo/60f1c9a6d4f7e8144d2c9f45/name
 ## 4. 更新仓库描述
 
 ### **接口**
-**PUT** `/api/repo/{repo_id}/desc`
+**PUT** `/repo/{repo_id}/desc`
 
 ### **请求参数**
 ```json
@@ -287,7 +287,7 @@ PUT /api/repo/60f1c9a6d4f7e8144d2c9f45/name
 
 ### **示例请求**
 ```http
-PUT /api/repo/60f1c9a6d4f7e8144d2c9f45/desc
+PUT /repo/60f1c9a6d4f7e8144d2c9f45/desc
 ```
 ```json
 {
@@ -310,11 +310,11 @@ PUT /api/repo/60f1c9a6d4f7e8144d2c9f45/desc
 ## 5. 删除仓库
 
 ### **接口**
-**DELETE** `/api/repo/{repo_id}`
+**DELETE** `/repo/{repo_id}`
 
 ### **示例请求**
 ```http
-DELETE /api/repo/60f1c9a6d4f7e8144d2c9f45
+DELETE /repo/60f1c9a6d4f7e8144d2c9f45
 ```
 
 ### **响应**
@@ -332,7 +332,7 @@ DELETE /api/repo/60f1c9a6d4f7e8144d2c9f45
 ## 6. 添加协作者
 
 ### **接口**
-**POST** `/api/repo/{repo_id}/collaborators`
+**POST** `/repo/{repo_id}/collaborators`
 
 ### **请求参数**
 ```json
@@ -345,7 +345,7 @@ DELETE /api/repo/60f1c9a6d4f7e8144d2c9f45
 
 ### **示例请求**
 ```http
-POST /api/repo/60f1c9a6d4f7e8144d2c9f45/collaborators
+POST /repo/60f1c9a6d4f7e8144d2c9f45/collaborators
 ```
 ```json
 {
@@ -379,7 +379,7 @@ POST /api/repo/60f1c9a6d4f7e8144d2c9f45/collaborators
 # 文件相关 API 文档
 
 ## 基础信息
-- **API 前缀**：`/api/file`
+- **API 前缀**：`/file`
 - **请求格式**：JSON / multipart-form-data
 - **响应格式**：JSON / 文件流
 - **认证方式**：部分接口需要提供用户认证信息
@@ -389,7 +389,7 @@ POST /api/repo/60f1c9a6d4f7e8144d2c9f45/collaborators
 ## 1. 上传文件
 
 ### **接口**
-**POST** `/api/file/upload`
+**POST** `/file/upload`
 
 ### **请求参数**
 - **Query 参数**：
@@ -405,7 +405,7 @@ POST /api/repo/60f1c9a6d4f7e8144d2c9f45/collaborators
 
 ### **示例请求**
 ```http
-POST /api/file/upload?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
+POST /file/upload?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
 Content-Type: multipart/form-data
 ```
 
@@ -437,7 +437,7 @@ Content-Type: multipart/form-data
 ## 2. 获取文件元数据
 
 ### **接口**
-**GET** `/api/file/{file_id}`
+**GET** `/file/{file_id}`
 
 ### **Query 参数**
 | 参数名 | 类型 | 是否必填 | 说明 |
@@ -447,7 +447,7 @@ Content-Type: multipart/form-data
 
 ### **示例请求**
 ```http
-GET /api/file/65f9a6c3d2b8a912b3f7d6c9?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
+GET /file/65f9a6c3d2b8a912b3f7d6c9?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
 ```
 
 ### **响应**
@@ -471,11 +471,11 @@ GET /api/file/65f9a6c3d2b8a912b3f7d6c9?repo_id=60f1c9a6d4f7e8144d2c9f45&source=t
 ## 3. 下载文件
 
 ### **接口**
-**GET** `/api/file/{file_id}/download`
+**GET** `/file/{file_id}/download`
 
 ### **示例请求**
 ```http
-GET /api/file/65f9a6c3d2b8a912b3f7d6c9/download
+GET /file/65f9a6c3d2b8a912b3f7d6c9/download
 ```
 
 ### **响应**
@@ -491,11 +491,11 @@ GET /api/file/65f9a6c3d2b8a912b3f7d6c9/download
 ## 4. 删除文件
 
 ### **接口**
-**DELETE** `/api/file/{file_id}`
+**DELETE** `/file/{file_id}`
 
 ### **示例请求**
 ```http
-DELETE /api/file/65f9a6c3d2b8a912b3f7d6c9
+DELETE /file/65f9a6c3d2b8a912b3f7d6c9
 ```
 
 ### **响应**
@@ -515,7 +515,7 @@ DELETE /api/file/65f9a6c3d2b8a912b3f7d6c9
 ## 5. 更新文件状态
 
 ### **接口**
-**PUT** `/api/file/{file_id}`
+**PUT** `/file/{file_id}`
 
 ### **Query 参数**
 | 参数名 | 类型 | 是否必填 | 说明 |
@@ -534,7 +534,7 @@ DELETE /api/file/65f9a6c3d2b8a912b3f7d6c9
 
 ### **示例请求**
 ```http
-PUT /api/file/65f9a6c3d2b8a912b3f7d6c9?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
+PUT /file/65f9a6c3d2b8a912b3f7d6c9?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
 ```
 ```json
 {
@@ -572,7 +572,7 @@ PUT /api/file/65f9a6c3d2b8a912b3f7d6c9?repo_id=60f1c9a6d4f7e8144d2c9f45&source=t
 # 聊天相关 API 文档
 
 ## 基础信息
-- **API 前缀**：`/api/chat`
+- **API 前缀**：`/chat`
 - **请求格式**：JSON / multipart-form-data
 - **响应格式**：JSON
 - **认证方式**：部分接口需要提供用户认证信息
@@ -582,7 +582,7 @@ PUT /api/file/65f9a6c3d2b8a912b3f7d6c9?repo_id=60f1c9a6d4f7e8144d2c9f45&source=t
 ## 1. 发送聊天消息
 
 ### **接口**
-**POST** `/api/chat`
+**POST** `/chat`
 
 ### **请求参数**
 ```json
@@ -595,7 +595,7 @@ PUT /api/file/65f9a6c3d2b8a912b3f7d6c9?repo_id=60f1c9a6d4f7e8144d2c9f45&source=t
 
 ### **示例请求**
 ```http
-POST /api/chat
+POST /chat
 Content-Type: application/json
 ```
 ```json
@@ -626,7 +626,7 @@ Content-Type: application/json
 ## 2. 发送带文件的聊天消息
 
 ### **接口**
-**POST** `/api/chat/with-file`
+**POST** `/chat/with-file`
 
 ### **请求参数**
 - **Query 参数**：
@@ -641,7 +641,7 @@ Content-Type: application/json
 
 ### **示例请求**
 ```http
-POST /api/chat/with-file?message=请分析这份合同的风险
+POST /chat/with-file?message=请分析这份合同的风险
 Content-Type: multipart/form-data
 ```
 
@@ -665,7 +665,7 @@ Content-Type: multipart/form-data
 ## 3. 获取用户聊天历史列表（暂未实现）
 
 ### **接口**
-**GET** `/api/chat/history/{user_id}`
+**GET** `/chat/history/{user_id}`
 
 ### **路径参数**
 | 参数名 | 类型 | 是否必填 | 说明 |
@@ -674,7 +674,7 @@ Content-Type: multipart/form-data
 
 ### **示例请求**
 ```http
-GET /api/chat/history/65dbf5b67a2f4d8e8b4c9f9d
+GET /chat/history/65dbf5b67a2f4d8e8b4c9f9d
 ```
 
 ### **响应**
@@ -690,7 +690,7 @@ GET /api/chat/history/65dbf5b67a2f4d8e8b4c9f9d
 ## 4. 获取特定聊天历史的消息列表（暂未实现）
 
 ### **接口**
-**GET** `/api/chat/history/{user_id}/{history_id}/messages`
+**GET** `/chat/history/{user_id}/{history_id}/messages`
 
 ### **路径参数**
 | 参数名 | 类型 | 是否必填 | 说明 |
@@ -700,7 +700,7 @@ GET /api/chat/history/65dbf5b67a2f4d8e8b4c9f9d
 
 ### **示例请求**
 ```http
-GET /api/chat/history/65dbf5b67a2f4d8e8b4c9f9d/60f1c9a6d4f7e8144d2c9f45/messages
+GET /chat/history/65dbf5b67a2f4d8e8b4c9f9d/60f1c9a6d4f7e8144d2c9f45/messages
 ```
 
 ### **响应**
@@ -716,7 +716,7 @@ GET /api/chat/history/65dbf5b67a2f4d8e8b4c9f9d/60f1c9a6d4f7e8144d2c9f45/messages
 ## 5. 删除特定聊天历史（暂未实现）
 
 ### **接口**
-**DELETE** `/api/chat/history/{user_id}/{history_id}`
+**DELETE** `/chat/history/{user_id}/{history_id}`
 
 ### **路径参数**
 | 参数名 | 类型 | 是否必填 | 说明 |
@@ -726,7 +726,7 @@ GET /api/chat/history/65dbf5b67a2f4d8e8b4c9f9d/60f1c9a6d4f7e8144d2c9f45/messages
 
 ### **示例请求**
 ```http
-DELETE /api/chat/history/65dbf5b67a2f4d8e8b4c9f9d/60f1c9a6d4f7e8144d2c9f45
+DELETE /chat/history/65dbf5b67a2f4d8e8b4c9f9d/60f1c9a6d4f7e8144d2c9f45
 ```
 
 ### **响应**
@@ -755,7 +755,7 @@ DELETE /api/chat/history/65dbf5b67a2f4d8e8b4c9f9d/60f1c9a6d4f7e8144d2c9f45
 # 文件处理 API 文档
 
 ## 基础信息
-- **API 前缀**：`/api/process`
+- **API 前缀**：`/process`
 - **请求格式**：JSON
 - **响应格式**：JSON
 - **认证方式**：部分接口需要提供用户认证信息
@@ -765,7 +765,7 @@ DELETE /api/chat/history/65dbf5b67a2f4d8e8b4c9f9d/60f1c9a6d4f7e8144d2c9f45
 ## 1. 处理文件并转换为 JSON
 
 ### **接口**
-**POST** `/api/process/{file_id}/process`
+**POST** `/process/{file_id}/process`
 
 ### **路径参数**
 | 参数名 | 类型 | 是否必填 | 说明 |
@@ -774,7 +774,7 @@ DELETE /api/chat/history/65dbf5b67a2f4d8e8b4c9f9d/60f1c9a6d4f7e8144d2c9f45
 
 ### **示例请求**
 ```http
-POST /api/process/65f9a6c3d2b8a912b3f7d6c9/process
+POST /process/65f9a6c3d2b8a912b3f7d6c9/process
 ```
 
 ### **响应**
