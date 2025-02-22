@@ -198,7 +198,7 @@ def upload_file(repo_id: str, file_obj, filename: str, source=True):
     file_size = len(file_content)
 
     file_info = {
-        "file_id": str(file_id),
+        "file_id": ObjectId(file_id),
         "filename": filename,
         "size": file_size,
         "uploaded_at": datetime.now(UTC),
