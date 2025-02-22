@@ -1,5 +1,10 @@
-import services.DataStructuring.DataStructuring.main_process as DataStructuring
+from fastapi import FastAPI
+from api.user import router as user_router
+from api.repo import router as repo_router
 
+# 创建 FastAPI 实例
+app = FastAPI(title="My FastAPI Project")
 
-if __name__ == "__main__":
-    DataStructuring.main_process()
+# 注册 API 路由
+app.include_router(user_router, prefix="/users", tags=["Users"])
+app.include_router(repo_router, prefix="/repos", tags=["Repos"])
