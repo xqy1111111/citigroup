@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from models.repo import RepoCreate, RepoResponse, AddCollaborator, RepoUpdate
-from backend.db import db_util as db_util
+from db import db_util as db_util
 
 router = APIRouter()
 
