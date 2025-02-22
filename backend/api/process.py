@@ -71,9 +71,10 @@ async def process_file_to_json(file_id: str):
    
     # 获取json_folder文件夹里所有文件的内容
     json_files = glob.glob(os.path.join(json_folder, "*.json"))
-    all_files_content = ""
+    all_files_content = {}
     for json_file in json_files:
         with open(json_file, "r", encoding="utf-8") as f:
-            all_files_content += f.read() + "\n"
+            file_content = f.read()
+            all_files_content[os.path.basename(json_file)] = file_content
 
     return all_files_content
