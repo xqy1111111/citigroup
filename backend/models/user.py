@@ -1,25 +1,19 @@
-from pydantic import BaseModel, Field
-from typing import List
-from datetime import datetime
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional, List
 
-class UserBase(BaseModel):
+class UserCreate(BaseModel):
     username: str
-    
-class UserCreate(UserBase):
+    email: EmailStr
     password: str
-    
-class UserInDB(UserBase):
-    user_id: str = Field(default_factory=lambda: str(ObjectId()))
-    password_hash: str
-    repo_ids: List[str] = []
-    chat_history_ids: List[str] = []
-    created_at: datetime = Field(default_factory=datetime.now)
-    
-class User(UserBase):
-    user_id: str
-    repo_ids: List[str]
-    chat_history_ids: List[str]
-    created_at: datetime
-    
+    profile_picture: Optional[str] = None  # 可选字段
+
+class UserResponse(BaseModel):
+    id: str
+    username: str
+    email: EmailStr
+    profile_picture: Optional[str] = None  # 可选字段
+    repos: List[str] = []  # 用户的仓库ID列表
+    collaborations: List[str] = []  # 用户的协作仓库ID列表
+
     class Config:
-        from_attributes = True 
+        orm_mode = True
