@@ -1,1 +1,1 @@
-DB_URL = "ongodb://localhost:27017/";
+DB_URL = "ongodb://localhost:27017/"
