@@ -1,3 +1,23 @@
+# 项目运行准备
+
+## 1. 安装依赖：
+```bash
+pip install -r requirements.txt
+```
+
+## 2. 安装ffmpeg：
+> 参考连接：https://blog.csdn.net/csdn_yudong/article/details/129182648
+
+## 3. 安装ollama，并且需要pull ollama 的特定模型
+> 参考连接：https://blog.csdn.net/2301_81940605/article/details/145512685  
+> 实际使用的模型是：https://ollama.org.cn/wangshenzhi/llama3-8b-chinese-chat-ollama-q4:v1
+
+## 4. 运行项目
+```bash
+uvicorn main:app --reload
+```
+然后可以在`localhost:8000/docs`访问项目，同时也可以进行API测试
+
 # 用户相关 API 文档
 
 ## 基础信息
