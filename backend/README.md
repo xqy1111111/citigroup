@@ -21,7 +21,7 @@ uvicorn main:app --reload
 # 用户相关 API 文档
 
 ## 基础信息
-- **API 前缀**：`/api/user`
+- **API 前缀**：`/user`
 - **请求格式**：JSON
 - **响应格式**：JSON
 - **认证方式**：部分接口需要提供用户认证信息
@@ -117,7 +117,7 @@ uvicorn main:app --reload
 
 ### **示例请求**
 ```http
-GET /api/user/65dbf5b67a2f4d8e8b4c9f9d
+GET /user/65dbf5b67a2f4d8e8b4c9f9d
 ```
 
 ### **响应**
