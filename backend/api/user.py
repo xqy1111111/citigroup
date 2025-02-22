@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from ..db.db_util import create_user, authenticate_user, get_user_by_id
+from db.db_util import create_user, authenticate_user, get_user_by_id
 from models.user import UserCreate, UserResponse, UserAuth, AuthResponse
 
 router = APIRouter()
