@@ -25,7 +25,7 @@ async def chat(message: str):
     """
     response_text = await ai_service.chat(message)
     return Message(sayer="assistant", text=response_text)
-
+''''''
 @router.post("/with-file", response_model=Message)
 async def chat_with_file(message: str, file: UploadFile = File(...)):
     """
@@ -62,12 +62,13 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
             os.remove(os.path.join(file_path, file))
 
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        await shutil.copyfileobj(file.file, buffer)
     
     # 这里需要添加文件处理逻辑
     await main_process()
     await target_to_json()
     if platform.system() == "Windows":
+        json_folder = "..\\services\\DataStructuring\\DataStructuring\\JsonData"
         json_folder = "..\\services\\DataStructuring\\DataStructuring\\JsonData"
     else:
         json_folder = "..\\services\\DataStructuring\\DataStructuring\\JsonData"
