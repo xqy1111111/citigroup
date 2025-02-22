@@ -1,11 +1,11 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from ..db.db_util import create_user, authenticate_user, get_user_by_id
 from models.user import UserCreate, UserResponse, UserAuth, AuthResponse
 
-app = FastAPI()
+router = APIRouter()
 
 # 用户创建路由
-@app.post("/users/", response_model=UserResponse)
+@router.post("/", response_model=UserResponse)
 async def create_new_user(user: UserCreate):
     """
     创建一个新的用户
@@ -16,7 +16,7 @@ async def create_new_user(user: UserCreate):
     return user_id
 
 # 用户认证路由
-@app.post("/users/authenticate/", response_model=AuthResponse)
+@router.post("/authenticate/", response_model=AuthResponse)
 async def authenticate_user_request(user: UserAuth):
     """
     认证用户的登陆
@@ -30,7 +30,7 @@ async def authenticate_user_request(user: UserAuth):
     return AuthResponse(user_id=user_id)
 
 # 获取用户信息路由
-@app.get("/users/{user_id}", response_model=UserResponse)
+@router.get("/{user_id}", response_model=UserResponse)
 async def get_user(user_id: str):
     """
     通过user_id获得用户的信息
