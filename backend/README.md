@@ -21,7 +21,7 @@ uvicorn main:app --reload
 # 用户相关 API 文档
 
 ## 基础信息
-- **API 前缀**：`/user`
+- **API 前缀**：`/users`
 - **请求格式**：JSON
 - **响应格式**：JSON
 - **认证方式**：部分接口需要提供用户认证信息
@@ -31,7 +31,7 @@ uvicorn main:app --reload
 ## 1. 创建用户
 
 ### **接口**
-**POST** `/user/`
+**POST** `/users/`
 
 ### **请求参数**
 ```json
@@ -74,7 +74,7 @@ uvicorn main:app --reload
 ## 2. 用户认证（登录）
 
 ### **接口**
-**POST** `/user/authenticate/`
+**POST** `/users/authenticate/`
 
 ### **请求参数**
 ```json
@@ -108,7 +108,7 @@ uvicorn main:app --reload
 ## 3. 获取用户信息
 
 ### **接口**
-**GET** `/user/{user_id}`
+**GET** `/users/{user_id}`
 
 ### **路径参数**
 | 参数名 | 类型 | 是否必填 | 说明 |
@@ -117,7 +117,7 @@ uvicorn main:app --reload
 
 ### **示例请求**
 ```http
-GET /user/65dbf5b67a2f4d8e8b4c9f9d
+GET /users/65dbf5b67a2f4d8e8b4c9f9d
 ```
 
 ### **响应**
@@ -159,7 +159,7 @@ GET /user/65dbf5b67a2f4d8e8b4c9f9d
 # 仓库相关 API 文档
 
 ## 基础信息
-- **API 前缀**：`/repo`
+- **API 前缀**：`/repos`
 - **请求格式**：JSON
 - **响应格式**：JSON
 - **认证方式**：部分接口需要提供用户认证信息
@@ -169,7 +169,7 @@ GET /user/65dbf5b67a2f4d8e8b4c9f9d
 ## 1. 创建仓库
 
 ### **接口**
-**POST** `/repo/`
+**POST** `/repos/`
 
 ### **请求参数**
 ```json
@@ -185,7 +185,7 @@ GET /user/65dbf5b67a2f4d8e8b4c9f9d
 
 ### **示例请求**
 ```http
-POST /repo/?owner_id=65dbf5b67a2f4d8e8b4c9f9d
+POST /repos/?owner_id=65dbf5b67a2f4d8e8b4c9f9d
 ```
 ```json
 {
@@ -223,7 +223,7 @@ POST /repo/?owner_id=65dbf5b67a2f4d8e8b4c9f9d
 ## 2. 获取仓库信息
 
 ### **接口**
-**GET** `/repo/{repo_id}`
+**GET** `/repos/{repo_id}`
 
 ### **路径参数**
 | 参数名 | 类型 | 是否必填 | 说明 |
@@ -232,7 +232,7 @@ POST /repo/?owner_id=65dbf5b67a2f4d8e8b4c9f9d
 
 ### **示例请求**
 ```http
-GET /repo/60f1c9a6d4f7e8144d2c9f45
+GET /repos/60f1c9a6d4f7e8144d2c9f45
 ```
 
 ### **响应**
@@ -258,7 +258,7 @@ GET /repo/60f1c9a6d4f7e8144d2c9f45
 ## 3. 更新仓库名称
 
 ### **接口**
-**PUT** `/repo/{repo_id}/name`
+**PUT** `/repos/{repo_id}/name`
 
 ### **请求参数**
 ```json
@@ -271,7 +271,7 @@ GET /repo/60f1c9a6d4f7e8144d2c9f45
 
 ### **示例请求**
 ```http
-PUT /repo/60f1c9a6d4f7e8144d2c9f45/name
+PUT /repos/60f1c9a6d4f7e8144d2c9f45/name
 ```
 ```json
 {
@@ -294,7 +294,7 @@ PUT /repo/60f1c9a6d4f7e8144d2c9f45/name
 ## 4. 更新仓库描述
 
 ### **接口**
-**PUT** `/repo/{repo_id}/desc`
+**PUT** `/repos/{repo_id}/desc`
 
 ### **请求参数**
 ```json
@@ -307,7 +307,7 @@ PUT /repo/60f1c9a6d4f7e8144d2c9f45/name
 
 ### **示例请求**
 ```http
-PUT /repo/60f1c9a6d4f7e8144d2c9f45/desc
+PUT /repos/60f1c9a6d4f7e8144d2c9f45/desc
 ```
 ```json
 {
@@ -330,11 +330,11 @@ PUT /repo/60f1c9a6d4f7e8144d2c9f45/desc
 ## 5. 删除仓库
 
 ### **接口**
-**DELETE** `/repo/{repo_id}`
+**DELETE** `/repos/{repo_id}`
 
 ### **示例请求**
 ```http
-DELETE /repo/60f1c9a6d4f7e8144d2c9f45
+DELETE /repos/60f1c9a6d4f7e8144d2c9f45
 ```
 
 ### **响应**
@@ -352,7 +352,7 @@ DELETE /repo/60f1c9a6d4f7e8144d2c9f45
 ## 6. 添加协作者
 
 ### **接口**
-**POST** `/repo/{repo_id}/collaborators`
+**POST** `/repos/{repo_id}/collaborators`
 
 ### **请求参数**
 ```json
@@ -365,7 +365,7 @@ DELETE /repo/60f1c9a6d4f7e8144d2c9f45
 
 ### **示例请求**
 ```http
-POST /repo/60f1c9a6d4f7e8144d2c9f45/collaborators
+POST /repos/60f1c9a6d4f7e8144d2c9f45/collaborators
 ```
 ```json
 {
@@ -399,7 +399,7 @@ POST /repo/60f1c9a6d4f7e8144d2c9f45/collaborators
 # 文件相关 API 文档
 
 ## 基础信息
-- **API 前缀**：`/file`
+- **API 前缀**：`/files`
 - **请求格式**：JSON / multipart-form-data
 - **响应格式**：JSON / 文件流
 - **认证方式**：部分接口需要提供用户认证信息
@@ -409,7 +409,7 @@ POST /repo/60f1c9a6d4f7e8144d2c9f45/collaborators
 ## 1. 上传文件
 
 ### **接口**
-**POST** `/file/upload`
+**POST** `/files/upload`
 
 ### **请求参数**
 - **Query 参数**：
@@ -425,7 +425,7 @@ POST /repo/60f1c9a6d4f7e8144d2c9f45/collaborators
 
 ### **示例请求**
 ```http
-POST /file/upload?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
+POST /files/upload?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
 Content-Type: multipart/form-data
 ```
 
@@ -457,7 +457,7 @@ Content-Type: multipart/form-data
 ## 2. 获取文件元数据
 
 ### **接口**
-**GET** `/file/{file_id}`
+**GET** `/files/{file_id}`
 
 ### **Query 参数**
 | 参数名 | 类型 | 是否必填 | 说明 |
@@ -467,7 +467,7 @@ Content-Type: multipart/form-data
 
 ### **示例请求**
 ```http
-GET /file/65f9a6c3d2b8a912b3f7d6c9?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
+GET /files/65f9a6c3d2b8a912b3f7d6c9?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
 ```
 
 ### **响应**
@@ -491,11 +491,11 @@ GET /file/65f9a6c3d2b8a912b3f7d6c9?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
 ## 3. 下载文件
 
 ### **接口**
-**GET** `/file/{file_id}/download`
+**GET** `/files/{file_id}/download`
 
 ### **示例请求**
 ```http
-GET /file/65f9a6c3d2b8a912b3f7d6c9/download
+GET /files/65f9a6c3d2b8a912b3f7d6c9/download
 ```
 
 ### **响应**
@@ -511,11 +511,11 @@ GET /file/65f9a6c3d2b8a912b3f7d6c9/download
 ## 4. 删除文件
 
 ### **接口**
-**DELETE** `/file/{file_id}`
+**DELETE** `/files/{file_id}`
 
 ### **示例请求**
 ```http
-DELETE /file/65f9a6c3d2b8a912b3f7d6c9
+DELETE /files/65f9a6c3d2b8a912b3f7d6c9
 ```
 
 ### **响应**
@@ -535,7 +535,7 @@ DELETE /file/65f9a6c3d2b8a912b3f7d6c9
 ## 5. 更新文件状态
 
 ### **接口**
-**PUT** `/file/{file_id}`
+**PUT** `/files/{file_id}`
 
 ### **Query 参数**
 | 参数名 | 类型 | 是否必填 | 说明 |
@@ -554,7 +554,7 @@ DELETE /file/65f9a6c3d2b8a912b3f7d6c9
 
 ### **示例请求**
 ```http
-PUT /file/65f9a6c3d2b8a912b3f7d6c9?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
+PUT /files/65f9a6c3d2b8a912b3f7d6c9?repo_id=60f1c9a6d4f7e8144d2c9f45&source=true
 ```
 ```json
 {
