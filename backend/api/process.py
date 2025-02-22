@@ -38,6 +38,12 @@ async def process_file_to_json(file_id: str):
     parent_dir = os.path.dirname(parent_dir)
     upload_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "SourceData")
     json_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "JsonData")
+
+    # 如果文件夹不存在就新建文件夹
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
+    if not os.path.exists(json_folder):
+        os.makedirs(json_folder)
     print("\n\n\n")
     print(upload_folder)
     print("\n\n\n")
