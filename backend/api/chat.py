@@ -33,6 +33,7 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
     """
     print("\n\n\n")
     print(file)
+    
     # 保存上传的文件到指定文件夹
     print("\n\n\n")
     print(platform.system())

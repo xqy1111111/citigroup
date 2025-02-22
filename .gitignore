@@ -46,3 +46,11 @@ build/
 *.bak
 *.tmp
 *.temp
+
+
+# Add the following directories to the ignore list
+backend/services/DataStructuring/DataStructuring/SourceCache/
+backend/services/DataStructuring/DataStructuring/JsonData/
+backend/services/DataStructuring/DataStructuring/SourceData/
+backend/services/DataStructuring/DataStructuring/TextData/
+backend/services/DataStructuring/DataStructuring/TargetData/
