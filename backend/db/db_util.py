@@ -4,10 +4,10 @@ from bson.objectid import ObjectId
 import hashlib
 from gridfs import GridFS
 from datetime import datetime, UTC
-from db_config import DB_URL
+from db import db_config
 
 # 初始化MongoDB客户端
-client = MongoClient(DB_URL)
+client = MongoClient(db_config.DB_URL)
 db = client.file_processing_app
 fs = GridFS(db)
 

@@ -1,7 +1,17 @@
 import pytest
 from fastapi.testclient import TestClient
-from backend.main import app  # 确保 `app` 是你的 FastAPI 实例
+# from backend.main import app  # 确保 `app` 是你的 FastAPI 实例
 
+from fastapi import FastAPI
+from api.user import router as user_router
+from api.repo import router as repo_router
+
+# 创建 FastAPI 实例
+app = FastAPI(title="My FastAPI Project")
+
+# 注册 API 路由
+app.include_router(user_router, prefix="/users", tags=["Users"])
+app.include_router(repo_router, prefix="/repos", tags=["Repos"])
 
 client = TestClient(app)  # 使用 TestClient 进行 API 测试
 

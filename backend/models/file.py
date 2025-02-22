@@ -11,7 +11,7 @@ class FileMetadata(BaseModel):
     status: Optional[str] = "unknown"  # 文件状态，默认为 "unknown"
 
     class Config:
-        orm_mode = True  # 支持从 MongoDB 查询结果转化为 Pydantic 模型
+        from_attributes = True  # 支持从 MongoDB 查询结果转化为 Pydantic 模型
 
 
 # 文件上传请求模型

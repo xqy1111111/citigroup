@@ -9,8 +9,8 @@ class UserCreate(BaseModel):
     profile_picture: Optional[str] = None  # 可选字段，头像URL或路径
 
     class Config:
-        min_anystr_length = 1  # 字符串字段最小长度为1
-        anystr_strip_whitespace = True  # 去除字段的前后空格
+        str_min_length = 1  # 字符串字段最小长度为1
+        str_strip_whitespace = True  # 去除字段的前后空格
 
 # 用户响应模型，用于返回用户信息
 class UserResponse(BaseModel):
@@ -22,7 +22,7 @@ class UserResponse(BaseModel):
     collaborations: List[str] = []  # 用户参与的仓库ID列表
 
     class Config:
-        orm_mode = True  # 使得 Pydantic 能够将 MongoDB 返回的对象转化为模型对象
+        from_attributes = True  # 使得 Pydantic 能够将 MongoDB 返回的对象转化为模型对象
 
 # 用户认证请求模型，用于用户登录时的请求数据
 class UserAuth(BaseModel):

@@ -7,8 +7,8 @@ class RepoCreate(BaseModel):
     desc: str  # 仓库描述
 
     class Config:
-        min_anystr_length = 1  # 字符串字段最小长度为 1
-        anystr_strip_whitespace = True  # 去除字段的前后空格
+        str_min_length = 1  # 字符串字段最小长度为 1
+        str_strip_whitespace = True  # 去除字段的前后空格
 
 
 # 仓库响应模型
@@ -22,7 +22,7 @@ class RepoResponse(BaseModel):
     results: List[str] = []  # 处理结果的 ID 列表
 
     class Config:
-        orm_mode = True  # 启用 ORM 模式，支持从 MongoDB 查询结果转化为 Pydantic 模型
+        from_attributes = True  # 启用 ORM 模式，支持从 MongoDB 查询结果转化为 Pydantic 模型
 
 
 # 更新仓库名称和描述的模型
