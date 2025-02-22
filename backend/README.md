@@ -12,7 +12,10 @@ pip install -r requirements.txt
 > 参考连接：https://blog.csdn.net/2301_81940605/article/details/145512685  
 > 实际使用的模型是：https://ollama.org.cn/wangshenzhi/llama3-8b-chinese-chat-ollama-q4:v1
 
-## 4. 运行项目
+## 4. 安装MongoDB
+> 参考连接：https://blog.csdn.net/LiDaode/article/details/133241186
+
+## 5. 运行项目
 ```bash
 uvicorn main:app --reload
 ```
