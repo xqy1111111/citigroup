@@ -13,7 +13,7 @@ async def create_new_user(user: UserCreate):
     :return: user id
     """
     user_id = create_user(user.username, user.email, user.password, user.profile_picture)
-    return user_id
+    return get_user_by_id(user_id)
 
 # 用户认证路由
 @router.post("/authenticate/", response_model=AuthResponse)
@@ -29,7 +29,7 @@ async def authenticate_user_request(user: UserAuth):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return AuthResponse(user_id=user_id)
 
-# 获取用户信息路由
+
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(user_id: str):
     """
@@ -41,4 +41,27 @@ async def get_user(user_id: str):
     user = get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
+    
+    # 将返回的 MongoDB 对象转换为 Pydantic 需要的格式
+    user_response = UserResponse(
+        id=str(user["_id"]),  # 将 _id 转换为字符串
+        username=user["username"],
+        email=user["email"],
+        profile_picture=user.get("profile_picture"),
+        repos=[str(repo) for repo in user["repos"]],  # 将 repos 中的 ObjectId 转换为字符串
+        collaborations=[str(collab) for collab in user["collaborations"]]
+    )
+    return user_response
+# # 获取用户信息路由
+# @router.get("/{user_id}", response_model=UserResponse)
+# async def get_user(user_id: str):
+#     """
+#     通过user_id获得用户的信息
+#     :param user_id: 就是user的 _id
+#     :return: 如果成功，则返回user:UserResponse
+#              否则返回status_code:404
+#     """
+#     user = get_user_by_id(user_id)
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     return user
