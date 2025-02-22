@@ -33,22 +33,22 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
     """
     print("\n\n\n")
     print(file)
+
     # 保存上传的文件到指定文件夹
     print("\n\n\n")
     print(platform.system())
     print("\n\n\n")
-    if platform.system() == "Windows":
-        # 获得当前文件路径
-        current_file_path = os.path.abspath(__file__)
-        # 获得当前文件的父目录
-        parent_dir = os.path.dirname(current_file_path)
-        parent_dir = os.path.dirname(parent_dir)
-        upload_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "SourceData")
-        json_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "JsonData")
-        print("\n\n\n")
-        print(upload_folder)
-        print("\n\n\n")
-    else:
+    
+    current_file_path = os.path.abspath(__file__)
+    # 获得当前文件的父目录
+    parent_dir = os.path.dirname(current_file_path)
+    parent_dir = os.path.dirname(parent_dir)
+    upload_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "SourceData")
+    json_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "JsonData")
+    print("\n\n\n")
+    print(upload_folder)
+    print("\n\n\n")
+    '''
         # 获得当前文件路径
         current_file_path = os.path.abspath(__file__)
         # 获得当前文件的父目录
@@ -56,7 +56,7 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
         parent_dir = os.path.dirname(parent_dir)
         upload_folder = os.path.join("..", parent_dir, "services", "DataStructuring", "DataStructuring", "SourceData")
         json_folder = os.path.join("..", parent_dir, "services", "DataStructuring", "DataStructuring", "JsonData")
-    
+    '''
     file_path = os.path.join(upload_folder, file.filename)
     # print("\n***file_path: ", file_path)
     

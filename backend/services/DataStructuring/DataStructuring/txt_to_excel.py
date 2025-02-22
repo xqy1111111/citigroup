@@ -132,7 +132,7 @@ def txt_to_excel(folder_path,output_path):
         向 Ollama API 发送请求并获取响应
         """
         data = {
-            "model": "wangshenzhi/llama3-8b-chinese-chat-ollama-q4",
+            "model": "wangshenzhi/llama3-8b-chinese-chat-ollama-q4:v1",
             "prompt": prompt,
             "stream": False,
             "temperature":0,
