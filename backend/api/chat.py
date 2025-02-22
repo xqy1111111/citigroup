@@ -11,6 +11,7 @@ import shutil
 import os
 import platform
 import glob
+from services.risk_prediction.prediction import predict_all
 
 
 router = APIRouter()
@@ -31,20 +32,16 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
     """
     处理带文件的聊天请求
     """
-    print("\n\n\n")
-    print(file)
-
-    # 保存上传的文件到指定文件夹
-    print("\n\n\n")
-    print(platform.system())
-    print("\n\n\n")
+    # 结构化 - 取出excel - 风险预测 - 风险预测结果加入message
     
     current_file_path = os.path.abspath(__file__)
     # 获得当前文件的父目录
     parent_dir = os.path.dirname(current_file_path)
     parent_dir = os.path.dirname(parent_dir)
     upload_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "SourceData")
+    target_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "TargetData")
     json_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "JsonData")
+    predict_folder = os.path.join(parent_dir, "services", "risk_prediction", "SourceData")
     print("\n\n\n")
     print(upload_folder)
     print("\n\n\n")
@@ -62,18 +59,59 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
     
     # 删除file_path 下的所有文件
     if os.path.exists(upload_folder):
-        for file_name in os.listdir(upload_folder):
-            os.remove(os.path.join(upload_folder, file_name))
+        for _file_name in os.listdir(upload_folder):
+            os.remove(os.path.join(upload_folder, _file_name))
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
     # 这里需要添加文件处理逻辑
     main_process.main_process()
+
+    # 将targetData文件夹下的excel文件移动到特定文件夹中，从而风险预测
+    # 将predict_folder文件夹清空
+    system_prompt = """- Role: 金融风险评估专家和高级金融分析师
+- Background: 用户拥有一个本地小模型，能够根据金融文件信息计算出诈骗概率。用户希望借助大模型的深度分析能力，结合诈骗概率和金融文件内容，获取关于诈骗风险的详细理由和针对性建议。
+- Profile: 你是一位在金融风险评估领域经验丰富的专家，精通金融文件分析、风险识别和欺诈检测。你能够快速准确地解读金融文件的关键信息，并结合诈骗概率数据，提供全面且具有实际操作性的建议。
+- Skills: 你具备金融数据分析、风险评估、欺诈检测、法律合规以及沟通能力，能够将复杂的金融信息转化为易于理解的建议。
+- Goals: 
+  1. 接收金融文件内容和诈骗概率数据。
+  2. 分析金融文件的关键信息，结合诈骗概率数据，找出潜在的风险点。
+  3. 提供详细的风险理由和针对性的建议。
+- Constrains: 你的分析应基于金融文件内容和诈骗概率数据，确保建议的合理性和实用性，同时遵守金融行业的法律法规和职业道德。
+- OutputFormat: 输出应包括风险理由和建议，格式清晰，便于用户理解和操作。
+- Workflow:
+  1. 接收金融文件内容和诈骗概率数据。
+  2. 分析金融文件的关键信息，包括交易主体、资金流向、合同条款等。
+  3. 结合诈骗概率数据，评估风险点并提供详细理由。
+  4. 根据风险评估结果，提出针对性的建议。
+- Examples:
+  - 例子：
+    - 金融文件内容：一份涉及跨境投资的合同，涉及金额较大，交易主体为一家新兴科技公司。
+    - 诈骗概率：30%
+    - 风险理由：诈骗概率较高，合同中存在一些模糊条款，资金流向不明确，且交易主体的背景信息有限。
+    - 建议：建议进一步调查交易主体的背景，明确资金流向，细化合同条款，必要时咨询法律专家。
+------------------------------------------------------------------------
+下面是用户要求：
+    """ 
+    if os.path.exists(predict_folder):
+        for _file_name in os.listdir(predict_folder):
+            os.remove(os.path.join(predict_folder, _file_name))
+    
+    for _file_name in os.listdir(target_folder):
+        shutil.move(os.path.join(target_folder, _file_name), os.path.join(predict_folder, _file_name))
+
+    predict_results = predict_all()
+    print("\n\n\n")
+    print(predict_results)
+    print("\n\n\n")
+
+
+    
     # 清空json文件夹
     if os.path.exists(json_folder):
-        for file_name in os.listdir(json_folder):
-            os.remove(os.path.join(json_folder, file_name))
+        for _file_name in os.listdir(json_folder):
+            os.remove(os.path.join(json_folder, _file_name))
     target_to_json.process_target_to_json()
     
    
@@ -84,7 +122,12 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
         with open(json_file, "r", encoding="utf-8") as f:
             all_files_content += f.read() + "\n"
 
-    message = message + " " + all_files_content
+    if predict_results[f'{file.filename}'] == None:
+        # 文件信息不全，让大模型给出一定的风险建议
+        message = system_prompt +  message + "\n文件内容如下： " + all_files_content + "\n由于用户上传的文件信息不全，请根据用户上传的文件信息给出一定的风险建议"
+    else:
+        # 文件信息全，给出风险概率，并让大模型根据风险概率给出建议
+        message = system_prompt + message + "\n文件内容如下： " + all_files_content + "\n用户上传的文件诈骗概率为： " + predict_results[f'{file.filename}']
     response_text = await ai_service.chat(message)
     return Message(sayer="assistant", text=response_text)
 
