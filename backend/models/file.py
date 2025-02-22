@@ -1,42 +1,27 @@
-from pydantic import BaseModel, Field
-from datetime import datetime
-from bson import ObjectId
+from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
-class FileBase(BaseModel):
-    filename: str
-    content: str
-
-class FileCreate(FileBase):
-    pass
-
-class FileInDB(FileBase):
-    file_id: str = Field(default_factory=lambda: str(ObjectId()))
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
-
-class File(FileBase):
+# 文件元数据响应模型
+class FileMetadata(BaseModel):
     file_id: str
-    created_at: datetime
-    updated_at: datetime
+    filename: str
+    size: int
+    upload_date: datetime  # 上传日期
+    status: Optional[str] = "unknown"  # 文件状态，默认为 "unknown"
 
     class Config:
-        from_attributes = True
+        orm_mode = True  # 支持从 MongoDB 查询结果转化为 Pydantic 模型
 
-class StructureFileBase(BaseModel):
-    excel_content: Optional[bytes]
-    json_content: Optional[dict]
 
-class StructureFileCreate(StructureFileBase):
-    pass
+# 文件上传请求模型
+class FileUpload(BaseModel):
+    filename: str  # 文件名
+    file_obj: bytes  # 文件内容（以二进制流上传）
+    source: bool = True  # 如果 source=True 则更新 files 列表，否则更新 results 列表
 
-class StructureFileInDB(StructureFileBase):
-    structure_file_id: str = Field(default_factory=lambda: str(ObjectId()))
-    created_at: datetime = Field(default_factory=datetime.now)
+# 文件状态更新请求模型
+class FileStatusUpdate(BaseModel):
+    status: str  # 文件的新状态，默认为 "complete"
+    source: bool = True  # 如果 source=True，则更新 files，否则更新 results
 
-class StructureFile(StructureFileBase):
-    structure_file_id: str
-    created_at: datetime
-
-    class Config:
-        from_attributes = True 
