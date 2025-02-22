@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 import requests
-from backend.models.chat import Message
+from models.chat import Message
 
 class AIService:
     def __init__(self):
