@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from typing import List
 from models.chat import ChatHistory, Message
-from models.user import User
+
 
 from services.ai_service import AIService
 from services.DataStructuring.DataStructuring import main_process
