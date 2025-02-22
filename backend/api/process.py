@@ -10,13 +10,14 @@ import shutil
 import os
 import platform
 import glob
+import json
 
 
-from _file import download_file
+from ._file import download_file
 router = APIRouter()
 
 
-@router.post("/{file_id}/process", response_model=Message)
+@router.post("/{file_id}/process")
 async def process_file_to_json(file_id: str):
     """
     处理带文件的聊天请求
@@ -58,7 +59,7 @@ async def process_file_to_json(file_id: str):
             os.remove(os.path.join(upload_folder, file_name_))
 
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file_content, buffer)
+        buffer.write(file_content)
     
     # 这里需要添加文件处理逻辑
     main_process.main_process()
@@ -71,10 +72,17 @@ async def process_file_to_json(file_id: str):
    
     # 获取json_folder文件夹里所有文件的内容
     json_files = glob.glob(os.path.join(json_folder, "*.json"))
-    all_files_content = {}
+    # 将json文件解析为json，并以json返回
+    json_data = []
     for json_file in json_files:
         with open(json_file, "r", encoding="utf-8") as f:
-            file_content = f.read()
-            all_files_content[os.path.basename(json_file)] = file_content
+            json_data.append(json.load(f))
+    
+    return json_data[0]
 
-    return all_files_content
+    # all_files_content = {}
+    # for json_file in json_files:
+    #     with open(json_file, "r", encoding="utf-8") as f:
+    #         file_content = f.read()
+    #         all_files_content[os.path.basename(json_file)] = file_content
+    

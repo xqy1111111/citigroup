@@ -122,12 +122,14 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
         with open(json_file, "r", encoding="utf-8") as f:
             all_files_content += f.read() + "\n"
 
-    if predict_results[f'{file.filename}'] == None:
+    # 获取文件名
+    excel_name = file.filename.split(".")[0] + ".xlsx"
+    if predict_results[f'{excel_name}'] == None:
         # 文件信息不全，让大模型给出一定的风险建议
         message = system_prompt +  message + "\n文件内容如下： " + all_files_content + "\n由于用户上传的文件信息不全，请根据用户上传的文件信息给出一定的风险建议"
     else:
         # 文件信息全，给出风险概率，并让大模型根据风险概率给出建议
-        message = system_prompt + message + "\n文件内容如下： " + all_files_content + "\n用户上传的文件诈骗概率为： " + predict_results[f'{file.filename}']
+        message = system_prompt + message + "\n文件内容如下： " + all_files_content + "\n用户上传的文件诈骗概率为： " + predict_results[f'{excel_name}']
     response_text = await ai_service.chat(message)
     return Message(sayer="assistant", text=response_text)
 
