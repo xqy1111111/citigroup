@@ -32,13 +32,35 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
     处理带文件的聊天请求
     """
     # 保存上传的文件到指定文件夹
+    print("\n\n\n")
+    print(platform.system())
+    print("\n\n\n")
     if platform.system() == "Windows":
-        upload_folder = "backend\\services\\DataStructuring\\DataStructuring\\SourceData"
+        # 获得当前文件路径
+        current_file_path = os.path.abspath(__file__)
+        # 获得当前文件的父目录
+        parent_dir = os.path.dirname(current_file_path)
+        parent_dir = os.path.dirname(parent_dir)
+        upload_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "SourceData")
+        print("\n\n\n")
+        print(upload_folder)
+        print("\n\n\n")
     else:
-        upload_folder = "backend/services/DataStructuring/DataStructuring/SourceData"
+        # 获得当前文件路径
+        current_file_path = os.path.abspath(__file__)
+        # 获得当前文件的父目录
+        parent_dir = os.path.dirname(current_file_path)
+        parent_dir = os.path.dirname(parent_dir)
+        upload_folder = os.path.join("..", parent_dir, "services", "DataStructuring", "DataStructuring", "SourceData")
     
     file_path = os.path.join(upload_folder, file.filename)
+    # print("\n***file_path: ", file_path)
     
+    # 删除file_path 下的所有文件
+    if os.path.exists(file_path):
+        for file in os.listdir(file_path):
+            os.remove(os.path.join(file_path, file))
+
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
@@ -46,9 +68,9 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
     await main_process()
     await target_to_json()
     if platform.system() == "Windows":
-        json_folder = "backend\\services\\DataStructuring\\DataStructuring\\JsonData"
+        json_folder = "..\\services\\DataStructuring\\DataStructuring\\JsonData"
     else:
-        json_folder = "backend/services/DataStructuring/DataStructuring/JsonData"
+        json_folder = "..\\services\\DataStructuring\\DataStructuring\\JsonData"
     
    
     # 获取json_folder文件夹里所有文件的内容
