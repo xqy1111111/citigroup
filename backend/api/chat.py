@@ -13,12 +13,12 @@ import platform
 import glob
 
 
-app = APIRouter()
+router = APIRouter()
 
 
 ai_service = AIService()
 
-@app.post("", response_model=Message)
+@router.post("", response_model=Message)
 async def chat(message: str):
     """
     处理用户的聊天请求
@@ -26,7 +26,7 @@ async def chat(message: str):
     response_text = await ai_service.chat(message)
     return Message(sayer="assistant", text=response_text)
 
-@app.post("/with-file", response_model=Message)
+@router.post("/with-file", response_model=Message)
 async def chat_with_file(message: str, file: UploadFile = File(...)):
     """
     处理带文件的聊天请求
