@@ -17,7 +17,7 @@ router = APIRouter()
 
 
 @router.post("/{file_id}/process", response_model=Message)
-async def process_file_to_excel(file_id: str):
+async def process_file_to_json(file_id: str):
     """
     处理带文件的聊天请求
     """
