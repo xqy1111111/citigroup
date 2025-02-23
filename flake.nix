@@ -2,6 +2,7 @@
 # run nix develop
 # or using nix-direnv to use this file
 # notice: you need to exec pip install -r requirements yourself
+# notice: this file is only for backend develop environment
 {
   description = "Flake for citigroup dev";
 
