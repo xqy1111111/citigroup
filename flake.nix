@@ -1,3 +1,7 @@
+# if you are using nix
+# run nix develop
+# or using nix-direnv to use this file
+# notice: you need to exec pip install -r requirements yourself
 {
   description = "Flake for citigroup dev";
 
@@ -25,9 +29,14 @@
 
 
       shellHook = ''
-        exec zsh
-        echo "Welcome to the nix shell";
+        echo "Welcome to the nix shell"
+        python --version
+        VENV_DIR=.env
+        if [ ! -d "$VENV_DIR" ]; then
+           python -m venv $VENV_DIR
+        fi
         source ./env/bin/activate
+        exec zsh
       '';
     };
   };
