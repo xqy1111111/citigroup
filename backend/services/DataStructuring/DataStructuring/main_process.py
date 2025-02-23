@@ -11,14 +11,24 @@ def main_process():
     # 获取当前文件的绝对路径
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    SourcePath="./SourceData"
+    SourcePath="SourceData"
     SourcePath=os.path.join(current_dir,SourcePath)
-    TextPath="./TextData"
+    TextPath="TextData"
     TextPath=os.path.join(current_dir,TextPath)
-    Input_for_ShenZijun_Path="./InputData_for_ShenZijun"
+    Input_for_ShenZijun_Path="InputData_for_ShenZijun"
     Input_for_ShenZijun_Path=os.path.join(current_dir,Input_for_ShenZijun_Path)
-    TargetPath="./TargetData"
+    TargetPath="TargetData"
     TargetPath=os.path.join(current_dir,TargetPath)
+
+    # 如果文件夹不存在就新建文件夹
+    if not os.path.exists(SourcePath):
+        os.makedirs(SourcePath)
+    if not os.path.exists(TextPath):
+        os.makedirs(TextPath)
+    if not os.path.exists(Input_for_ShenZijun_Path):
+        os.makedirs(Input_for_ShenZijun_Path)
+    if not os.path.exists(TargetPath):
+        os.makedirs(TargetPath)
 
     # 将部分文件夹清空
     Clear_Dir([TextPath,Input_for_ShenZijun_Path,TargetPath])

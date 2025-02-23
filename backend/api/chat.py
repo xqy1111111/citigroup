@@ -42,6 +42,16 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
     target_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "TargetData")
     json_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "JsonData")
     predict_folder = os.path.join(parent_dir, "services", "risk_prediction", "SourceData")
+
+    # 如果文件夹不存在就新建文件夹
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
+    if not os.path.exists(target_folder):
+        os.makedirs(target_folder)
+    if not os.path.exists(json_folder):
+        os.makedirs(json_folder)
+    if not os.path.exists(predict_folder):
+        os.makedirs(predict_folder)
     print("\n\n\n")
     print(upload_folder)
     print("\n\n\n")
@@ -99,7 +109,7 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
             os.remove(os.path.join(predict_folder, _file_name))
     
     for _file_name in os.listdir(target_folder):
-        shutil.move(os.path.join(target_folder, _file_name), os.path.join(predict_folder, _file_name))
+        shutil.copy(os.path.join(target_folder, _file_name), os.path.join(predict_folder, _file_name))
 
     predict_results = predict_all()
     print("\n\n\n")
