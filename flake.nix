@@ -33,12 +33,11 @@
       shellHook = ''
         echo "Welcome to the nix shell"
         python --version
-        VENV_DIR=.env
+        VENV_DIR=env
         if [ ! -d "$VENV_DIR" ]; then
            python -m venv $VENV_DIR
         fi
         source ./env/bin/activate
-        exec zsh
       '';
     };
   };
