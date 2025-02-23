@@ -1,6 +1,5 @@
-# nix dev util
-flake.*
-*.nix
+# nix flake lock
+flake.lock
 
 # Python虚拟环境
 env/
