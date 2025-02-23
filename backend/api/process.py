@@ -20,7 +20,7 @@ router = APIRouter()
 @router.post("/{file_id}/process")
 async def process_file_to_json(file_id: str):
     """
-    处理带文件的聊天请求
+    处理文件并返回json数据
     """
     file_data = download_file(file_id)
     if not file_data:
