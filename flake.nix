@@ -1,3 +1,4 @@
+# if you are not using nix, don't bother with this file
 # if you are using nix
 # run nix develop
 # or using nix-direnv to use this file
