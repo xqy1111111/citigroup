@@ -7,6 +7,8 @@ venv/
 .env
 .venv/
 ENV/
+.envrc
+.direnv/
 
 # Python缓存文件
 __pycache__/
