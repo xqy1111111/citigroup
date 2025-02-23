@@ -146,12 +146,23 @@ def get_repo_by_id(repo_id):
 
 def delete_repo(repo_id):
     """
-    删除仓库
-    :param repo_id 该repo的id
+    删除仓库，并更新相关用户的 repos 属性
+    :param repo_id: 仓库的 ID
     :return: 成功删除返回 success
     """
-    db.repos.delete_one({"_id": ObjectId(repo_id)})
-    return 'success'
+    # 1. 删除仓库
+    result = db.repos.delete_one({"_id": ObjectId(repo_id)})
+    
+    if result.deleted_count == 0:
+        return "repo not found"
+    
+    # 2. 从所有用户的 repos 属性中删除该仓库 ID
+    db.users.update_many(
+        {"repos": ObjectId(repo_id)},
+        {"$pull": {"repos": ObjectId(repo_id)}}
+    )
+
+    return "success"
 
 
 def add_collaborator(repo_id, collaborator_id):
