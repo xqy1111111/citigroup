@@ -24,7 +24,7 @@ export interface userData {
 export interface repo {
     id: string;
     name: string;
-    desc?: string;
+    desc: string;
     owner_id: string;
     collaborators: string[];
     files: string[];
