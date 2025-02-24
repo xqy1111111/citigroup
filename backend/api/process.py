@@ -9,6 +9,8 @@ from models.chat import ChatHistory, Message
 
 from services.ai_service import AIService
 from services.DataStructuring.DataStructuring import main_process
+from db.db_util import create_json_res
+
 from services import target_to_json
 import shutil
 import os
@@ -108,12 +110,14 @@ async def process_file_to_json(file_id: str):
    
     # 获取json_folder文件夹里所有文件的内容
     json_files = glob.glob(os.path.join(json_folder, "*.json"))
+
     # 将json文件解析为json，并以json返回
     json_data = []
     for json_file in json_files:
         with open(json_file, "r", encoding="utf-8") as f:
             json_data.append(json.load(f))
-    
+
+    create_json_res(file_id, json_data[0])
     return json_data[0]
 
     # all_files_content = {}
