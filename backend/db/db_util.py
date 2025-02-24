@@ -358,6 +358,35 @@ def create_or_get_chat_history(user_id: str, repo_id: str):
     chat_history["_id"] = str(result.inserted_id)
     return chat_history
 
+def update_chat_history(user_id: str, repo_id: str, text: str):
+    """
+    往对应的 chat_history 里面新增一条 text 记录。
+    
+    :param user_id: 用户的 id
+    :param repo_id: 仓库的 id
+    :param text: 要添加的文本
+    :return: 更新后的 chat 记录，如果失败则返回错误信息
+    """
+    user_id_obj = ObjectId(user_id)
+    repo_id_obj = ObjectId(repo_id)
+    # 查找 chat_history
+    chat = db.chats.find_one({"user_id": user_id_obj, "repo_id": repo_id_obj})
+    
+    if not chat:
+        return {"error": "Chat history not found."}
+
+    # 更新 chat_history，追加新的 text
+    db.chats.update_one(
+        {"user_id": user_id_obj, "repo_id": repo_id_obj},
+        {"$push": {"texts": text}}  # 追加文本
+    )
+
+    # 获取更新后的 chat_history 并返回
+    updated_chat = db.chats.find_one({"user_id": user_id_obj, "repo_id": repo_id_obj})
+    if updated_chat:
+        updated_chat["_id"] = str(updated_chat["_id"])  # 转换 ObjectId 为字符串
+    return updated_chat
+
 
 def create_json_res(file_id: str, json_content):
     """
