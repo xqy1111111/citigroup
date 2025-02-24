@@ -1,25 +1,16 @@
 import React, { useState } from 'react';
 import Modal from './Modal';
-
-interface Repo {
-    id: string;
-    name: string;
-    desc: string;
-    owner_id: string;
-    collaborators: string[];
-    files: string[];
-    results: string[];
-}
+import { repo } from '../../../api/user.tsx';
 
 interface SettingsModalProps {
-    repo: Repo;
-    onSave: (repo: Repo) => void;
+    repo: repo;
+    onSave: (repo: repo) => void;
     onDelete: (id: string) => void;
-    onClose: (repo: Repo) => void;
+    onClose: (repo: repo) => void;
 }
 
 function SettingsModal({ repo, onSave, onDelete, onClose }: SettingsModalProps) {
-    const [editedRepo, setEditedRepo] = useState<Repo>({
+    const [editedRepo, setEditedRepo] = useState<repo>({
         ...repo,
         name: repo.name || '',
         desc: repo.desc || ''

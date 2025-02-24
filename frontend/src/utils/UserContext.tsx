@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext } from 'react';
-import { userData, repo, addRepo as addRepoAPI, deleteRepo as deleteRepoAPI, updateRepoName, updateRepoDesc, getRepo } from '../api/User.tsx';
+import { userData,getUser, repo, addRepo as addRepoAPI, deleteRepo as deleteRepoAPI, updateRepoName, updateRepoDesc, getRepo} from '../api/user.tsx';
 
 
 interface UserContextType {
@@ -55,35 +55,35 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [userState, setUserState] = useState<userData>(defaultUserState);
   const [reposState, setreposState] = useState<repo[]>(defaultReposList);
 
-  const updateUser = async (updates: userData) => {
-    console.log('Received updates:', updates);
-    try {
-      if (updates.repos && updates.repos.length > 0) {
-        const detailedRepos: repo[] = await Promise.all(
-          updates.repos.map(async (repoID) => {
-            try {
-              const repoDetail: repo = await getRepo(repoID);
-              return repoDetail;
-            } catch (error) {
-              console.error(`获取仓库 ${repoID} 详细信息失败:`, error);
-              return defaultRepo;
+    const updateUser = async (updates: userData) => {
+        console.log('Received updates:', updates);
+        try {
+            if (updates.repos && updates.repos.length > 0) {
+                let detailedRepos: repo[] = await Promise.all(
+                    updates.repos.map(async (repoID) => {
+                        try {
+                            const repoDetail:repo = await getRepo(repoID);
+                            return repoDetail;
+                        } catch (error) {
+                            console.error(`获取仓库 ${repoID} 详细信息失败:`, error);
+                            return defaultRepo;
+                        }
+                    })
+                );
+                detailedRepos = detailedRepos.filter(repo => repo.id !== "");
+                // 一起更新两个状态
+                await Promise.all([
+                    setUserState(updates),
+                    setreposState(detailedRepos)
+                ]);
+            } else {
+                setUserState(updates);
             }
-          })
-        );
-
-        // 一起更新两个状态
-        await Promise.all([
-          setUserState(updates),
-          setreposState(detailedRepos)
-        ]);
-      } else {
-        setUserState(updates);
-      }
-    } catch (error) {
-      console.error('更新用户信息失败:', error);
-      throw error;
-    }
-  };
+        } catch (error) {
+            console.error('更新用户信息失败:', error);
+            throw error;
+        }
+    };
 
   const addRepo = async (repo: { name: string; desc: string }): Promise<repo> => {
     try {
@@ -151,15 +151,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setreposState(defaultReposList);
   };
 
-  const value: UserContextType = {
-    user: userState,
-    repos: reposState,
-    updateUser,
-    addRepo,
-    deleteRepo,
-    updateRepo,
-    resetUser
-  };
+    //这里就是对外的接口列表
+    const value: UserContextType = {
+        user: userState,
+        repos: reposState,
+        updateUser,
+        addRepo,
+        deleteRepo,
+        updateRepo,
+        resetUser
+    };
 
   return (
     <UserContext.Provider value={value}>

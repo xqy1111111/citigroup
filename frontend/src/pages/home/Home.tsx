@@ -6,23 +6,15 @@ import { MenuBar } from '../../components/MenuBar/MenuBar';
 import { NavigationBar } from "../../components/NavigationBar/NavigationBar";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { useUser } from '../../utils/UserContext.tsx';
+import { repo } from '../../api/user.tsx';
 import "../reset.css";
 import "./Home.css";
 
 interface SettingModalState {
     visible: boolean;
-    repo: Repo;
+    repo: repo;
 }
 
-interface Repo {
-    id: string;
-    name: string;
-    desc: string;
-    owner_id: string;
-    collaborators: string[];
-    files: string[];
-    results: string[];
-}
 
 function Home() {
     const { user, repos, addRepo, deleteRepo, updateRepo } = useUser();
@@ -48,7 +40,7 @@ function Home() {
     };
 
     // 处理编辑仓库
-    const handleEditRepo = (editedRepo: Repo) => {
+    const handleEditRepo = (editedRepo: repo) => {
         // 更新本地状态
         const updatedRepo = repos.find(repo => repo.id === editedRepo.id);
         if (updatedRepo) {
@@ -60,7 +52,7 @@ function Home() {
     };
 
     // 处理保存仓库编辑
-    const handleEditOnclose = async (editedRepo: Repo) => {
+    const handleEditOnclose = async (editedRepo: repo) => {
         try {
             await updateRepo(editedRepo.id, {
                 name: editedRepo.name,
@@ -101,12 +93,12 @@ function Home() {
     };
 
     // 打开设置弹窗
-    const openSettings = (repo: Repo) => {
+    const openSettings = (repo: repo) => {
         setSettingModal({ visible: true, repo });
     };
 
     // 处理进入仓库
-    const handleEnterRepo = (repo: Repo) => {
+    const handleEnterRepo = (repo: repo) => {
         console.log('进入仓库:', repo.name);
     };
 
@@ -123,7 +115,7 @@ function Home() {
                                 <div className="Main-Repo">
                                     <h1 className="Main-Repo-Title">仓库列表</h1>
                                     <RepoList
-                                        repos={repos as Repo[]}
+                                        repos={repos as repo[]}
                                         onOpenSettings={openSettings}
                                         onEnterRepo={handleEnterRepo}
                                     />
