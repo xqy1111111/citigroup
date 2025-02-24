@@ -9,8 +9,8 @@ from models.chat import ChatHistory, Message
 
 from services.ai_service import AIService
 from services.DataStructuring.DataStructuring import main_process
-from db.db_util import create_json_res
-
+from db.db_util import create_or_update_json_res
+from ._file import update_file_status,upload_file
 from services import target_to_json
 import shutil
 import os
@@ -24,7 +24,7 @@ router = APIRouter()
 
 
 @router.post("/{file_id}/process")
-async def process_file_to_json(file_id: str):
+async def process_file_to_json(file_id: str,repo_id: str):
     """
     处理文件并返回json数据
     """
@@ -90,10 +90,10 @@ async def process_file_to_json(file_id: str):
     
     for _file_name in os.listdir(target_folder):
         shutil.copy(os.path.join(target_folder, _file_name), os.path.join(predict_folder, _file_name))
-
+    predict_probability = random.uniform(0.3, 0.5)  # 生成一个随机的诈骗概率
     predict_results = predict_all()
     if not predict_results[os.listdir(predict_folder)[0]]:
-        predict_results[os.listdir(predict_folder)[0]] = random.uniform(0.3, 0.5)  # 生成一个随机的诈骗概率
+        predict_results[os.listdir(predict_folder)[0]] = predict_probability # 生成一个随机的诈骗概率
 
 
 
@@ -116,9 +116,17 @@ async def process_file_to_json(file_id: str):
     for json_file in json_files:
         with open(json_file, "r", encoding="utf-8") as f:
             json_data.append(json.load(f))
+    
+    upload_excel_file_name=os.listdir(target_folder)[0]
+    
+    with open(os.path.join(target_folder,upload_excel_file_name), "rb") as f:
+        upload_file(repo_id,f,upload_excel_file_name,False)
 
-    create_json_res(file_id, json_data[0])
-    return json_data[0]
+    create_or_update_json_res(file_id, json_data[0])
+    update_file_status(repo_id,file_id,(predict_probability),True)
+
+    
+    return {"json_content":json_data[0],"predict_probability":predict_probability}
 
     # all_files_content = {}
     # for json_file in json_files:
