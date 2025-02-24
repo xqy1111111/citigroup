@@ -6,11 +6,12 @@ import AuthModal from "./AuthModal/AuthModal.tsx";
 import "./MenuBar.css";
 
 export function MenuBar() {
-  const { user, updateUser, resetUser } = useUser();
+  const { user, currentRepo, updateUser, resetUser, resetCurrentRepo, } = useUser();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const navigate = useNavigate();
 
   const handleHomeClick = () => {
+    resetCurrentRepo();
     navigate("/home");
   };
 
@@ -54,19 +55,21 @@ export function MenuBar() {
           >
             Home
           </Button>
-          <Button
-            variant="contained"
-            onClick={handleChatClick}
-            style={{
-              height: '30px',
-              backgroundColor: 'rgb(51,51,51)',
-              color: 'white',
-              borderRadius: '5px',
-              marginRight: '10px',
-            }}
-          >
-            Chat
-          </Button>
+          {currentRepo.id !== "" ? (
+            <Button
+              variant="contained"
+              onClick={handleChatClick}
+              style={{
+                height: '30px',
+                backgroundColor: 'rgb(51,51,51)',
+                color: 'white',
+                borderRadius: '5px',
+                marginRight: '10px',
+              }}
+            >
+              Chat
+            </Button>) : <></>
+          }
         </div>
       </div>
       <div className="menu-right">

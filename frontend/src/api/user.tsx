@@ -40,6 +40,22 @@ export interface file {
   status: string;
 }
 
+export interface chat {
+  "question": string,
+  "answer": string,
+}
+export interface chatHistory{
+  "user_id": string,
+  "repo_id": string,
+  "texts": chat[]
+}
+
+export interface chatWithFile{
+  "sayer": string, //"assistant"
+  "text": string,
+  "timestamp": string
+}
+
 //user的三个api
 export async function userLogin(data: loginData): Promise<authResponse> {
   const response = await request.post('/users/authenticate/', {

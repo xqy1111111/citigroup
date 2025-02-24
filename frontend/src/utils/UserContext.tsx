@@ -5,11 +5,14 @@ import { userData,getUser, repo, addRepo as addRepoAPI, deleteRepo as deleteRepo
 interface UserContextType {
   user: userData;
   repos: repo[];
+  currentRepo: repo;
   updateUser: (updates: userData) => Promise<void>;
   addRepo: (repo: { name: string; desc: string }) => Promise<repo>;
   deleteRepo: (repoId: string) => Promise<void>;
   updateRepo: (repoId: string, updates: { name: string; desc: string }) => Promise<void>;
   resetUser: () => void;
+  setCurrentRepo: (repo: repo) => void;
+  resetCurrentRepo: () => void;
 }
 
 const defaultUserState: userData = {
@@ -36,6 +39,7 @@ const defaultReposList: repo[] = [];
 const UserContext = createContext<UserContextType>({
   user: defaultUserState,
   repos: defaultReposList,
+  currentRepo: defaultRepo,
   updateUser: async () => { },
   addRepo: async () => ({
     id: "",
@@ -48,12 +52,15 @@ const UserContext = createContext<UserContextType>({
   }),
   deleteRepo: async () => { },
   updateRepo: async () => { },
-  resetUser: () => { }
+  resetUser: () => { },
+  setCurrentRepo: () => { },
+  resetCurrentRepo: () => { }
 });
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [userState, setUserState] = useState<userData>(defaultUserState);
   const [reposState, setreposState] = useState<repo[]>(defaultReposList);
+  const [currentRepoState, setCurrentRepoState] = useState<repo>(defaultRepo);
 
     const updateUser = async (updates: userData) => {
         console.log('Received updates:', updates);
@@ -70,7 +77,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                         }
                     })
                 );
-                detailedRepos = detailedRepos.filter(repo => repo.id !== "");
+              detailedRepos = detailedRepos.filter(repo => repo.id !== "");
                 // 一起更新两个状态
                 await Promise.all([
                     setUserState(updates),
@@ -151,15 +158,26 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setreposState(defaultReposList);
   };
 
+  const setCurrentRepo = (repo: repo) => {
+    setCurrentRepoState(repo);
+  };
+
+  const resetCurrentRepo = () => {
+    setCurrentRepoState(defaultRepo);
+  };
+
     //这里就是对外的接口列表
     const value: UserContextType = {
         user: userState,
         repos: reposState,
+        currentRepo: currentRepoState,
         updateUser,
         addRepo,
         deleteRepo,
         updateRepo,
-        resetUser
+        resetUser,
+        setCurrentRepo,
+        resetCurrentRepo
     };
 
   return (

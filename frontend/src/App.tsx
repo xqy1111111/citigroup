@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Chat from './pages/chat/Chat';
 import Home from './pages/home/Home';
 import { General } from './pages/general/General.tsx';
-import { UserProvider } from './utils/UserContext.tsx';
+import { UserProvider, useUser } from './utils/UserContext.tsx';
 import { Info } from './pages/info/Info.tsx';
 
 function App() {

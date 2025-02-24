@@ -9,6 +9,7 @@ import { useUser } from '../../utils/UserContext.tsx';
 import { repo } from '../../api/user.tsx';
 import "../reset.css";
 import "./Home.css";
+import { useNavigate } from 'react-router-dom';
 
 interface SettingModalState {
     visible: boolean;
@@ -17,7 +18,8 @@ interface SettingModalState {
 
 
 function Home() {
-    const { user, repos, addRepo, deleteRepo, updateRepo } = useUser();
+    const navigate = useNavigate();
+    const { user, repos, addRepo, deleteRepo, updateRepo, setCurrentRepo } = useUser();
     const [settingModal, setSettingModal] = useState<SettingModalState>({
         visible: false,
         repo: {
@@ -99,6 +101,9 @@ function Home() {
 
     // 处理进入仓库
     const handleEnterRepo = (repo: repo) => {
+        //todo: 进入仓库(设置当前仓库)
+        setCurrentRepo(repo);
+        navigate(`/repo`);
         console.log('进入仓库:', repo.name);
     };
 

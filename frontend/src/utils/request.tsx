@@ -4,8 +4,6 @@ import { config } from "../config/api";
 export const request = axios.create(
   {
     baseURL: config.baseUrl,
-    // 允许跨域携带cookie
-    withCredentials: true
   }
 );
 
