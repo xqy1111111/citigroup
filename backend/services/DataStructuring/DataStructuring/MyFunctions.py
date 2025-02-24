@@ -183,7 +183,7 @@ def get_prompt(context):
     },
     "交易类型": {
         "解释": "描述交易的类型，如转账、支付、取款、存款等。此分类变量有助于对不同交易行为进行分类。",
-        "示例": ["转账", "支付", "取款", "存款", "缴费"]
+        "示例": ["CASH_IN", "CASH_OUT", "DEBIT", "PAYMENT", "TRANSFER"]
     },
     "交易金额": {
         "解释": "交易涉及的金融数额。（可以分为cash in和cash out）",
@@ -235,7 +235,7 @@ def get_prompt(context):
     },
     "初始账户年龄": {
         "解释": "初始账户从开户到当前的时长。",
-        "示例": ["4年", "2年", "6年", "1年", "3年"]
+        "示例": ["4年", "2年", "5个月", "1年", "3年"]
     },
     "初始账户职业": {
         "解释": "初始账户所有者所从事的职业。",
@@ -254,11 +254,13 @@ def get_prompt(context):
         "示例": ["张三", "李四", "王五", "赵六", "孙七"]
     },
     "目标账户旧余额": {
-        "解释": "表示交易前目标账户的余额，为评估因入账资金导致的账户余额变化提供了一个基线。",
+        # "解释": "表示交易前目标账户的余额，为评估因入账资金导致的账户余额变化提供了一个基线。",
+        "解释": "表示交易前目标账户的余额",
         "示例": ["2000.00", "100.50", "3000.75", "50.20", "1500"]
     },
     "目标账户新余额": {
-        "解释": "代表交易完成后目标账户的余额，有助于了解入账资金对账户余额的影响。",
+        # "解释": "代表交易完成后目标账户的余额，有助于了解入账资金对账户余额的影响。",
+        "解释": "代表交易完成后目标账户的余额",
         "示例": ["7000.00", "200.70", "5000.25", "100.90", "3000"]
     },
     "目标账户开户信息": {
@@ -299,7 +301,16 @@ def get_prompt(context):
     }
 }
     content=context_all[context]
-    return f"请提取并只输出给定文本中的{context}指标，其中{context}指标含义为{content['解释']}，目标文本内容为"  
+    if context=="交易类型":
+        return f"请提取并只输出给定文本中的{context}指标，其中{context}指标含义为{content['解释']}，\n严格从我给的五个选项中进行选择，不要输出任何多余信息，输出为一个大写字母，选项包括 A.存款，B.取款，C.转账，D.支付，E.借记;\n目标文本内容为："
+    
+    string=""
+    for i in range(len(content["示例"])):
+        string+=content["示例"][i]
+        if i!=len(content["示例"])-1:
+            string+="，"
+    return f"请提取并只输出给定文本中的{context}指标，其中{context}指标含义为:{content['解释']}，\n严格仿照示例进行回答，保证回答的真实性，不要输出任何多余信息和提示，\n若没有相关信息可以输出“无”\n示例包括：{string}，\n目标文本内容为："  
+
 def extract(context,response):
     import re
 
@@ -313,11 +324,24 @@ def extract(context,response):
 
     # 定义一个函数，用于从大模型回答中提取交易类型
     def extract_transaction_type(response):
-        pattern = r'交易类型\s*:\s*([\u4e00-\u9fa5a-zA-Z]+)'
-        match = re.search(pattern, response)
-        if match:
-            return match.group(1)
-        return '无'
+        # pattern = r'交易类型\s*:\s*([\u4e00-\u9fa5a-zA-Z]+)'
+        # match = re.search(pattern, response)
+        # if match:
+        #     return match.group(1)
+        # return '无'
+
+        if 'A' in response or 'a' in response or '存款' in response:
+            return '存款'
+        elif 'B' in response or 'b' in response or '取款' in response:
+            return '取款'
+        elif 'C' in response or 'c' in response or '转账' in response:
+            return '转账'   
+        elif 'D' in response or 'd' in response or '支付' in response:
+            return '支付'
+        elif 'E' in response or 'e' in response or '借记' in response:
+            return '借记'
+        else:
+            return '无'
 
     # 定义一个函数，用于从大模型回答中提取交易金额
     def extract_transaction_amount(response):

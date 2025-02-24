@@ -11,7 +11,7 @@ import os
 import platform
 import glob
 import json
-
+from io import BytesIO
 
 from ._file import download_file
 router = APIRouter()
@@ -37,6 +37,7 @@ async def process_file_to_json(file_id: str):
     parent_dir = os.path.dirname(current_file_path)
     parent_dir = os.path.dirname(parent_dir)
     upload_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "SourceData")
+    excel_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "TargetData")
     json_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "JsonData")
 
     # 如果文件夹不存在就新建文件夹
@@ -83,7 +84,22 @@ async def process_file_to_json(file_id: str):
     for json_file in json_files:
         with open(json_file, "r", encoding="utf-8") as f:
             json_data.append(json.load(f))
+    # TODO:保存excel文件和json文件
+    # 读取二进制流，保证只有一个excel文件
+    excel_files = glob.glob(os.path.join(excel_folder, "*.xlsx"))
+    if len(excel_files) != 1:
+        raise HTTPException(status_code=400, detail="Excel file not found")
+    excel_file = excel_files[0]
+    # 读取excel文件，并用 BytesIO 包装一下
+    excel_file_content = BytesIO(excel_file)
+    # 将excel_file_content 保存到数据库中
+
+    # 将json_data 保存到数据库中
+    json_data_content = BytesIO(json_data)
+    # 将json_data_content 保存到数据库中
     
+
+
     return json_data[0]
 
     # all_files_content = {}

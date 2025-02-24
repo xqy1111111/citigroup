@@ -48,31 +48,31 @@ def predict_once(file_path):
         if mask.any():
             content = df.loc[mask, '内容'].iloc[0]
             if key == '交易类型':
-                if content == 'CASH_IN':
+                if content == '入账':
                     data.loc[0, 'type_CASH_IN'] = True
                     data.loc[0, 'type_CASH_OUT'] = False
                     data.loc[0, 'type_DEBIT'] = False
                     data.loc[0, 'type_PAYMENT'] = False
                     data.loc[0, 'type_TRANSFER'] = False
-                elif content == 'CASH_OUT':
+                elif content == '提现':
                     data.loc[0, 'type_CASH_IN'] = False
                     data.loc[0, 'type_CASH_OUT'] = True
                     data.loc[0, 'type_DEBIT'] = False
                     data.loc[0, 'type_PAYMENT'] = False
                     data.loc[0, 'type_TRANSFER'] = False
-                elif content == 'DEBIT':
+                elif content == '借记':
                     data.loc[0, 'type_CASH_IN'] = False
                     data.loc[0, 'type_CASH_OUT'] = False
                     data.loc[0, 'type_DEBIT'] = True
                     data.loc[0, 'type_PAYMENT'] = False
                     data.loc[0, 'type_TRANSFER'] = False
-                elif content == 'PAYMENT':
+                elif content == '支付':
                     data.loc[0, 'type_CASH_IN'] = False
                     data.loc[0, 'type_CASH_OUT'] = False
                     data.loc[0, 'type_DEBIT'] = False
                     data.loc[0, 'type_PAYMENT'] = True
                     data.loc[0, 'type_TRANSFER'] = False
-                elif content == 'TRANSFER':
+                elif content == '转账':
                     data.loc[0, 'type_CASH_IN'] = False
                     data.loc[0, 'type_CASH_OUT'] = False
                     data.loc[0, 'type_DEBIT'] = False

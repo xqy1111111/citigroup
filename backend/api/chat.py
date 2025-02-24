@@ -139,7 +139,7 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
         message = system_prompt +  message + "\n文件内容如下： " + all_files_content + "\n由于用户上传的文件信息不全，请根据用户上传的文件信息给出一定的风险建议"
     else:
         # 文件信息全，给出风险概率，并让大模型根据风险概率给出建议
-        message = system_prompt + message + "\n文件内容如下： " + all_files_content + "\n用户上传的文件诈骗概率为： " + predict_results[f'{excel_name}']
+        message = system_prompt + message + "\n文件内容如下： " + all_files_content + "\n用户上传的文件诈骗概率为： " + str(predict_results[f'{excel_name}'])
     response_text = await ai_service.chat(message)
     return Message(sayer="assistant", text=response_text)
 
