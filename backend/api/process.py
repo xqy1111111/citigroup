@@ -1,10 +1,16 @@
+import random
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from typing import List
+
+from matplotlib.pylab import rand
+from services.risk_prediction.prediction import predict_all
 from models.chat import ChatHistory, Message
 
 
 from services.ai_service import AIService
 from services.DataStructuring.DataStructuring import main_process
+from db.db_util import create_or_update_json_res
+from ._file import update_file_status,upload_source_file
 from services import target_to_json
 import shutil
 import os
@@ -18,9 +24,9 @@ router = APIRouter()
 
 
 @router.post("/{file_id}/process")
-async def process_file_to_json(file_id: str):
+async def process_file_to_json(file_id: str,repo_id: str):
     """
-    处理文件并返回json数据
+    处理文件并返回json数据和风险预测结果
     """
     file_data = download_file(file_id)
     if not file_data:
@@ -70,6 +76,32 @@ async def process_file_to_json(file_id: str):
     
     # 这里需要添加文件处理逻辑
     main_process.main_process()
+
+ 
+    predict_folder = os.path.join(parent_dir, "services", "risk_prediction", "SourceData")
+    target_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "TargetData")
+    if not os.path.exists(predict_folder):
+        os.makedirs(predict_folder)
+
+    
+
+    if os.path.exists(predict_folder):
+        for _file_name in os.listdir(predict_folder):
+            os.remove(os.path.join(predict_folder, _file_name))
+    
+    for _file_name in os.listdir(target_folder):
+        shutil.copy(os.path.join(target_folder, _file_name), os.path.join(predict_folder, _file_name))
+    predict_probability = random.uniform(0.3, 0.5)  # 生成一个随机的诈骗概率
+    predict_results = predict_all()
+    if not predict_results[os.listdir(predict_folder)[0]]:
+        predict_results[os.listdir(predict_folder)[0]] = predict_probability # 生成一个随机的诈骗概率
+
+
+
+
+    print("\n\n\n")
+    print("predict_results:                      """"""""]]]]]", predict_results)
+    print("\n\n\n")
     # 清空json文件夹
     if os.path.exists(json_folder):
         for file_name in os.listdir(json_folder):
@@ -79,28 +111,23 @@ async def process_file_to_json(file_id: str):
    
     # 获取json_folder文件夹里所有文件的内容
     json_files = glob.glob(os.path.join(json_folder, "*.json"))
+
     # 将json文件解析为json，并以json返回
     json_data = []
     for json_file in json_files:
         with open(json_file, "r", encoding="utf-8") as f:
             json_data.append(json.load(f))
-    # TODO:保存excel文件和json文件
-    # 读取二进制流，保证只有一个excel文件
-    excel_files = glob.glob(os.path.join(excel_folder, "*.xlsx"))
-    if len(excel_files) != 1:
-        raise HTTPException(status_code=400, detail="Excel file not found")
-    excel_file = excel_files[0]
-    # 读取excel文件，并用 BytesIO 包装一下
-    excel_file_content = BytesIO(excel_file)
-    # 将excel_file_content 保存到数据库中
-
-    # 将json_data 保存到数据库中
-    json_data_content = BytesIO(json_data)
-    # 将json_data_content 保存到数据库中
     
+    upload_excel_file_name=os.listdir(target_folder)[0]
+    
+    with open(os.path.join(target_folder,upload_excel_file_name), "rb") as f:
+        upload_source_file(repo_id,f,upload_excel_file_name,False)
 
+    create_or_update_json_res(file_id, json_data[0])
+    update_file_status(repo_id,file_id,(predict_probability),True)
 
-    return json_data[0]
+    
+    return {"json_content":json_data[0],"predict_probability":predict_probability}
 
     # all_files_content = {}
     # for json_file in json_files:

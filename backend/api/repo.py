@@ -1,3 +1,4 @@
+from typing import Any, Dict
 from fastapi import APIRouter, HTTPException
 from models.repo import RepoCreate, RepoResponse, AddCollaborator, RepoUpdate
 from db import db_util
@@ -5,18 +6,32 @@ from bson import ObjectId
 
 router = APIRouter()
 
-def objectID2str(repo: dict) -> RepoResponse:
+def convert_objectid(obj: Any):
     """
-    处理 MongoDB 查询返回的 Repo 数据，将 ObjectId 转换为字符串
+    递归转换 MongoDB 查询返回的字典中的所有 ObjectId 为字符串。
     """
+    if isinstance(obj, ObjectId):
+        return str(obj)
+    elif isinstance(obj, list):
+        return [convert_objectid(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {key: convert_objectid(value) for key, value in obj.items()}
+    return str(obj)
+
+def objectID2str(repo: Dict) -> RepoResponse:
+    """
+    处理 MongoDB 查询返回的 Repo 数据，将所有 ObjectId 转换为字符串
+    """
+    repo = convert_objectid(repo)  # 深度转换 ObjectId
+    print(repo)
     return RepoResponse(
-        id=str(repo["_id"]),
+        id=repo["_id"],
         name=repo["name"],
         desc=repo["desc"],
-        owner_id=str(repo["owner_id"]),
-        collaborators=[str(collab) for collab in repo.get("collaborators", [])],
-        files=[str(file) for file in repo.get("files", [])],
-        results=[str(result) for result in repo.get("results", [])]
+        owner_id=repo["owner_id"],
+        collaborators=repo.get("collaborators", []),
+        files=repo.get("files", []),
+        results=repo.get("results", [])
     )
 
 # 创建仓库

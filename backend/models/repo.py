@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 # 仓库创建模型
 class RepoCreate(BaseModel):
@@ -18,8 +18,8 @@ class RepoResponse(BaseModel):
     desc: str  # 仓库描述
     owner_id: str  # 仓库拥有者的 _id
     collaborators: List[str] = []  # 协作者的 ID 列表
-    files: List[str] = []  # 文件的 ID 列表
-    results: List[str] = []  # 处理结果的 ID 列表
+    files: List[Dict] = [] # 文件的 ID 列表
+    results: List[Dict] = []  # 处理结果的 ID 列表
 
     class Config:
         from_attributes = True  # 启用 ORM 模式，支持从 MongoDB 查询结果转化为 Pydantic 模型

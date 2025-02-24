@@ -5,7 +5,7 @@ from io import BytesIO
 
 # 假设这些函数是从 db_util.py 中导入
 from db.db_util import (
-    upload_file,
+    upload_source_file,
     get_file_metadata_by_id,
     delete_file,
     download_file,
@@ -28,7 +28,7 @@ async def upload_file_api(repo_id: str,
     # 将上传的文件内容读取到内存
     file_content = await cur_file.read()
 
-    file_id = upload_file(
+    file_id = upload_source_file(
         repo_id=repo_id,
         file_obj=BytesIO(file_content),  # 用 BytesIO 包装一下
         filename= cur_file.filename,

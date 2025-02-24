@@ -191,7 +191,41 @@ def add_collaborator(repo_id, collaborator_id):
     return "success"  # 成功添加协作者
 
 # =============================== 文件相关操作 ===============================
-def upload_file(repo_id: str, file_obj, filename: str, source=True):
+def upload_res_file(repo_id: str, file_obj, source_file_id,filename: str, source=False):
+    """
+    上传结果文件到 GridFS，并更新 repo 的 files 或 results 列表
+    :param repo_id: 仓库 ID
+    :param file_obj: 需要上传的文件对象（二进制流）
+    :param filename: 文件名
+    :param source: 如果 source=True 则更新 files 列表，如果为 False 则更新 results 列表
+    :return: 成功返回文件 ID，失败返回 None
+    """
+    repo = db.repos.find_one({"_id": ObjectId(repo_id)})
+    if not repo:
+        return None  # 仓库不存在
+
+    file_content = file_obj.read()
+    file_id = fs.put(file_content, filename=filename)
+    file_size = len(file_content)
+
+
+    file_info = {
+        "source_file": ObjectId(source_file_id),
+        "file_id": ObjectId(file_id),
+        "filename": filename,
+        "size": file_size,
+        "uploaded_at": datetime.now(UTC),
+        "status": "uploaded"
+    }
+
+    db.repos.update_one(
+        {"_id": ObjectId(repo_id)},
+        {"$push": {"files" if source else "results": file_info}}
+    )
+
+    return str(file_id)
+
+def upload_source_file(repo_id: str, file_obj, filename: str, source=True):
     """
     上传文件到 GridFS，并更新 repo 的 files 或 results 列表
     :param repo_id: 仓库 ID
@@ -208,7 +242,9 @@ def upload_file(repo_id: str, file_obj, filename: str, source=True):
     file_id = fs.put(file_content, filename=filename)
     file_size = len(file_content)
 
+
     file_info = {
+        "source_file": False,
         "file_id": ObjectId(file_id),
         "filename": filename,
         "size": file_size,
@@ -222,7 +258,6 @@ def upload_file(repo_id: str, file_obj, filename: str, source=True):
     )
 
     return str(file_id)
-
 
 def get_file_metadata_by_id(repo_id: str, file_id: str, source=True):
     """
@@ -327,6 +362,113 @@ def update_file_status(repo_id: str, file_id: str, new_status: str = "complete",
     print(f"文件 {file_id} 状态更新为 {new_status}")
     return "success"
 
+
+def create_or_get_chat_history(user_id: str, repo_id: str):
+    """
+    创建一个新的 chat_history，如果已存在则返回已有的 chat 记录。
+    
+    :param user_id: 用户的 id
+    :param repo_id: 仓库的 id
+    :return: 返回 chat 的 MongoDB _id（字符串格式），以及已有的 chat 记录
+    """
+    
+    user_id_obj = ObjectId(user_id)
+    repo_id_obj = ObjectId(repo_id)
+
+    # 查询是否已有记录
+    existing_chat = db.chats.find_one({"user_id": user_id_obj, "repo_id": repo_id_obj})
+    if existing_chat:
+        existing_chat["_id"] = str(existing_chat["_id"])  # 转换 ObjectId 为字符串
+        return existing_chat  # 直接返回已有的 chat 记录
+    
+    # 创建新记录
+    chat_history = {
+        "user_id": user_id_obj,
+        "repo_id": repo_id_obj,
+        "texts": [],  # 初始化为空的聊天记录
+    }
+    result = db.chats.insert_one(chat_history)
+    
+    # 返回新插入的 chat 记录
+    chat_history["_id"] = str(result.inserted_id)
+    return chat_history
+
+def update_chat_history(user_id: str, repo_id: str, question: str, answer:str):
+    """
+    往对应的 chat_history 里面新增一条 text 记录。
+    
+    :param user_id: 用户的 id
+    :param repo_id: 仓库的 id
+    :param text: 要添加的文本
+    :return: 更新后的 chat 记录，如果失败则返回错误信息
+    """
+    user_id_obj = ObjectId(user_id)
+    repo_id_obj = ObjectId(repo_id)
+    # 查找 chat_history
+    chat = db.chats.find_one({"user_id": user_id_obj, "repo_id": repo_id_obj})
+    
+    if not chat:
+        return {"error": "Chat history not found."}
+
+    # 更新 chat_history，追加新的 text
+    text = {
+        "question": question,
+        "answer": answer
+    }
+    db.chats.update_one(
+        {"user_id": user_id_obj, "repo_id": repo_id_obj},
+        {"$push": {"texts": text}}  # 追加文本
+    )
+
+    # 获取更新后的 chat_history 并返回
+    updated_chat = db.chats.find_one({"user_id": user_id_obj, "repo_id": repo_id_obj})
+    if updated_chat:
+        updated_chat["_id"] = str(updated_chat["_id"])  # 转换 ObjectId 为字符串
+    return updated_chat
+
+
+def create_or_update_json_res(file_id: str, json_content):
+    """
+    创建一个json格式的结果
+    :param file_id: 文件的id
+    :param json_content: json格式的结果
+    :return: 新生成的json_res的_id
+    """
+    file_id_obj = ObjectId(file_id)
+
+
+    # 查询是否已有记录
+    existing_json_res = db.json_res.find_one({"file_id": file_id_obj})
+
+    if existing_json_res:
+        db.json_res.update_one(
+            {"file_id": file_id_obj},
+            {"$set": {"content": json_content}}  
+        )
+
+        return str(existing_json_res["_id"])  # 转换 ObjectId 为字符串
+
+    file_json = {
+        "file_id": file_id_obj, 
+        "content": json_content   
+    }
+
+    result = db.json_res.insert_one(file_json)
+    return str(result.inserted_id)
+
+
+def get_json_res(file_id: str):
+    """
+    返回json格式的结果
+    :param file_id: 文件的id(注意这里是结果文件的id而不是json_res的id)
+    :return: 对应的json_res，如果结果不存在则返回None
+    """
+    file_id_obj = ObjectId(file_id)
+    json_res = db.json_res.find_one({"file_id": file_id_obj})
+    if json_res:
+        json_res["_id"] = str(json_res["_id"])  # 转换 ObjectId 为字符串
+        return json_res  # 直接返回已有的 chat 记录
+    return None
 
 
 
