@@ -15,8 +15,11 @@
 .main-content {
   display: flex;
   flex: 1;
+<<<<<<< HEAD
   height: calc(100vh - 30px); /* 减去顶部菜单栏的高度 */
   overflow: hidden;
+=======
+>>>>>>> a4b07901086dbc879fed0d2779666917bbd2cc46
 }
 
 .content {
@@ -24,7 +27,10 @@
   background-color: #1e1e1e;
   padding: 20px;
   overflow-y: auto;
+<<<<<<< HEAD
   scroll-behavior: smooth;
+=======
+>>>>>>> a4b07901086dbc879fed0d2779666917bbd2cc46
 }
 
 .content-header {
@@ -40,6 +46,7 @@
 .info-container {
   display: flex;
   flex-direction: column;
+<<<<<<< HEAD
   gap: 20px;
   padding-bottom: 20px;
 }
@@ -173,4 +180,7 @@
   height: 100%;
   color: #f14c4c;
   font-size: 16px;
+=======
+  gap: 24px;
+>>>>>>> a4b07901086dbc879fed0d2779666917bbd2cc46
 }
