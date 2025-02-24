@@ -358,7 +358,7 @@ def create_or_get_chat_history(user_id: str, repo_id: str):
     chat_history["_id"] = str(result.inserted_id)
     return chat_history
 
-def update_chat_history(user_id: str, repo_id: str, text: str):
+def update_chat_history(user_id: str, repo_id: str, question: str, answer:str):
     """
     往对应的 chat_history 里面新增一条 text 记录。
     
@@ -376,6 +376,10 @@ def update_chat_history(user_id: str, repo_id: str, text: str):
         return {"error": "Chat history not found."}
 
     # 更新 chat_history，追加新的 text
+    text = {
+        "question": question,
+        "answer": answer
+    }
     db.chats.update_one(
         {"user_id": user_id_obj, "repo_id": repo_id_obj},
         {"$push": {"texts": text}}  # 追加文本
@@ -388,7 +392,7 @@ def update_chat_history(user_id: str, repo_id: str, text: str):
     return updated_chat
 
 
-def create_json_res(file_id: str, json_content):
+def create_or_update_json_res(file_id: str, json_content):
     """
     创建一个json格式的结果
     :param file_id: 文件的id
@@ -396,6 +400,18 @@ def create_json_res(file_id: str, json_content):
     :return: 新生成的json_res的_id
     """
     file_id_obj = ObjectId(file_id)
+
+
+    # 查询是否已有记录
+    existing_json_res = db.json_res.find_one({"file_id": file_id_obj})
+
+    if existing_json_res:
+        db.json_res.update_one(
+            {"file_id": file_id_obj},
+            {"$set": {"content": json_content}}  
+        )
+
+        return str(existing_json_res["_id"])  # 转换 ObjectId 为字符串
 
     file_json = {
         "file_id": file_id_obj, 
