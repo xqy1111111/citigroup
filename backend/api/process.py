@@ -10,7 +10,7 @@ from models.chat import ChatHistory, Message
 from services.ai_service import AIService
 from services.DataStructuring.DataStructuring import main_process
 from db.db_util import create_or_update_json_res
-from ._file import update_file_status,upload_file
+from ._file import update_file_status,upload_source_file
 from services import target_to_json
 import shutil
 import os
@@ -120,7 +120,7 @@ async def process_file_to_json(file_id: str,repo_id: str):
     upload_excel_file_name=os.listdir(target_folder)[0]
     
     with open(os.path.join(target_folder,upload_excel_file_name), "rb") as f:
-        upload_file(repo_id,f,upload_excel_file_name,False)
+        upload_source_file(repo_id,f,upload_excel_file_name,False)
 
     create_or_update_json_res(file_id, json_data[0])
     update_file_status(repo_id,file_id,(predict_probability),True)
