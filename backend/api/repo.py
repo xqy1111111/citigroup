@@ -1,3 +1,4 @@
+from typing import Any, Dict
 from fastapi import APIRouter, HTTPException
 from models.repo import RepoCreate, RepoResponse, AddCollaborator, RepoUpdate
 from db import db_util
@@ -5,7 +6,7 @@ from bson import ObjectId
 
 router = APIRouter()
 
-def convert_objectid(obj: Any) -> Any:
+def convert_objectid(obj: Any):
     """
     递归转换 MongoDB 查询返回的字典中的所有 ObjectId 为字符串。
     """
