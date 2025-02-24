@@ -36,6 +36,7 @@ async def chat(message: str, user_id: str, repo_id: str):
     处理用户的聊天请求
     """
     response_text = await ai_service.chat(message)
+    get_chat(user_id, repo_id)
     update_chat_history(user_id, repo_id, message, response_text)
     return Message(sayer="assistant", text=response_text)
 ''''''
@@ -44,6 +45,7 @@ async def chat_with_file(user_id: str, repo_id: str, message: str, file: UploadF
     """
     处理带文件的聊天请求
     """
+    get_chat(user_id, repo_id)
     question = message
     # 结构化 - 取出excel - 风险预测 - 风险预测结果加入message
     
