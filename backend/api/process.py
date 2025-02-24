@@ -17,7 +17,7 @@ import os
 import platform
 import glob
 import json
-
+from io import BytesIO
 
 from ._file import download_file
 router = APIRouter()
@@ -43,6 +43,7 @@ async def process_file_to_json(file_id: str,repo_id: str):
     parent_dir = os.path.dirname(current_file_path)
     parent_dir = os.path.dirname(parent_dir)
     upload_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "SourceData")
+    excel_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "TargetData")
     json_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "JsonData")
 
     # 如果文件夹不存在就新建文件夹

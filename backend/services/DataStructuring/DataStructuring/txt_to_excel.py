@@ -46,65 +46,95 @@ def txt_to_excel(folder_path,output_path):
                                 response=''
                                 try:
                                     response = get_ollama_response(prompt+content)
-                                    print(response)
-                                    if context=='设备信息' or context=='初始账户开户信息' or context=='目标账户开户信息':
-                                        pass
-                                    elif context=='是否欺诈'or context=='是否标记为欺诈':
-                                        if '是欺诈' in response and '不是欺诈' not in response:
-                                            response='是'
-                                        elif '否' in response or '不是欺诈' in response:
-                                            response='否'
+                                    ###
+                                    #  print("\n\n\ncontent is :"+content)
+                                    ### 
+                                    print('response',response)
+                                    if(context=='交易类型'):
+                                        if 'A' in response or 'a' in response or '存款' in response:
+                                            response = '存款'
+                                        elif 'B' in response or 'b' in response or '取款' in response:
+                                            response = '取款'
+                                        elif 'C' in response or 'c' in response or '转账' in response:
+                                            response = '转账'
+                                        elif 'D' in response or 'd' in response or '支付' in response:
+                                            response = '支付'
+                                        elif 'E' in response or 'e' in response or '借记' in response:
+                                            response = '借记'
                                         else:
-                                            response='否'
-                                    else:
-                                        # response=extract(context,response)
-                                        pattern = r'[：:](.*?)(?:\n|$|。)'
-                                        matches = re.findall(pattern, response, re.DOTALL)
+                                            response = '无'
+                                    if context=='交易金额' or context=='初始账户旧余额' or context=='初始账户新余额' or context=='目标账户旧余额' or context=='目标账户新余额':
+                                        # 保证不出现空行，只提供第一行就好
+                                        pattern = r'(\d+\.\d+|\d+)'
+                                        matches = re.findall(pattern, response)
                                         results = [match.strip() for match in matches if match.strip()]
-                                        pattern_dash = r'-(.*?)(?:\n|$|。)'
-                                        matches_dash = re.findall(pattern_dash, response, re.DOTALL)
-                                        results_dash = [match.strip() for match in matches_dash if match.strip()]
-                                        pattern_quote = r'“(.*?)”'
-                                        matches_quote = re.findall(pattern_quote, response)
-                                        results_quote =[match.strip() for match in matches_quote if match.strip()]
-                                        pattern_s = r'```(.*?)```'
-                                        matches_s = re.findall(pattern_s, response, re.DOTALL)
-                                        results_s=[match.strip() for match in matches_s if match.strip()]
-                                        # 提取两个 | 之间的内容
-                                        pattern_pipe = r'\|(.*?)(?:\n|$|。)'
-                                        matches_pipe = re.findall(pattern_pipe, response, re.DOTALL)
-                                        results_pipe = [match.strip() for match in matches_pipe if match.strip()]
-                                        lines = response.splitlines()
-                                        r = []
-                                        i = 0
-                                        while i < len(lines):
-                                            if lines[i].strip() == '':  # 找到一个空行
-                                                start_index = i + 1
-                                                # 找到下一个空行
-                                                j = start_index
-                                                while j < len(lines) and lines[j].strip() != '':
-                                                    j += 1
-                                                end_index = j
-                                                # 如果两个空行之间只有一行内容
-                                                if end_index - start_index == 1 and start_index!=len(lines)-1 and start_index!=0 and len(lines[start_index])<30:
-                                                    r.append(lines[start_index].strip())
-                                                i = end_index
-                                            else:
-                                                i += 1
-                                        if results_s:
-                                            response=results_s[0]
-                                        elif results_dash:
-                                            response=results_dash[0]
-                                        elif r:
-                                            response=r[-1]
-                                        elif results:
+                                        if results:
                                             response=results[0]
-                                        elif results_quote:
-                                            response=results_quote[-1]
-                                        elif results_pipe:
-                                            response=results_pipe[0]
                                         else:
                                             response='无'
+                                        if response == '无':
+                                            response = '0'
+                                    # 空行全部替换为空格：
+                                    response = response.replace('\n', ' ')
+                                    # else:
+                                    #     if context=='设备信息' or context=='初始账户开户信息' or context=='目标账户开户信息':
+                                    #         pass
+                                    #     elif context=='是否欺诈'or context=='是否标记为欺诈':
+                                    #         if '是欺诈' in response and '不是欺诈' not in response:
+                                    #             response='是'
+                                    #         elif '否' in response or '不是欺诈' in response:
+                                    #             response='否'
+                                    #         else:
+                                    #             response='否'
+                                    #     else:
+                                    #         response=extract(context,response)
+                                    #         pattern = r'[：:](.*?)(?:\n|$|。)'
+                                    #         matches = re.findall(pattern, response, re.DOTALL)
+                                    #         results = [match.strip() for match in matches if match.strip()]
+                                    #         pattern_dash = r'-(.*?)(?:\n|$|。)'
+                                    #         matches_dash = re.findall(pattern_dash, response, re.DOTALL)
+                                    #         results_dash = [match.strip() for match in matches_dash if match.strip()]
+                                    #         pattern_quote = r'“(.*?)”'
+                                    #         matches_quote = re.findall(pattern_quote, response)
+                                    #         results_quote =[match.strip() for match in matches_quote if match.strip()]
+                                    #         pattern_s = r'```(.*?)```'
+                                    #         matches_s = re.findall(pattern_s, response, re.DOTALL)
+                                    #         results_s=[match.strip() for match in matches_s if match.strip()]
+                                    #         # 提取两个 | 之间的内容
+                                    #         pattern_pipe = r'\|(.*?)(?:\n|$|。)'
+                                    #         matches_pipe = re.findall(pattern_pipe, response, re.DOTALL)
+                                    #         results_pipe = [match.strip() for match in matches_pipe if match.strip()]
+                                    #         lines = response.splitlines()
+                                    #         r = []
+                                    #         i = 0
+                                    #         while i < len(lines):
+                                    #             if lines[i].strip() == '':  # 找到一个空行
+                                    #                 start_index = i + 1
+                                    #                 # 找到下一个空行
+                                    #                 j = start_index
+                                    #                 while j < len(lines) and lines[j].strip() != '':
+                                    #                     j += 1
+                                    #                 end_index = j
+                                    #                 # 如果两个空行之间只有一行内容
+                                    #                 if end_index - start_index == 1 and start_index!=len(lines)-1 and start_index!=0 and len(lines[start_index])<30:
+                                    #                     r.append(lines[start_index].strip())
+                                    #                 i = end_index
+                                    #             else:
+                                    #                 i += 1
+                                    #         if results_s:
+                                    #             response=results_s[0]
+                                    #         elif results_dash:
+                                    #             response=results_dash[0]
+                                    #         elif r:
+                                    #             response=r[-1]
+                                    #         elif results:
+                                    #             response=results[0]
+                                    #         elif results_quote:
+                                    #             response=results_quote[-1]
+                                    #         elif results_pipe:
+                                    #             response=results_pipe[0]
+                                    #         else:
+                                    #             response='无'
                                     print('response',response)
                                 except:
                                     response='无'

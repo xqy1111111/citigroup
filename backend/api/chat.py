@@ -13,25 +13,36 @@ import platform
 import glob
 from services.risk_prediction.prediction import predict_all
 
-
+from db.db_util import create_or_get_chat_history,update_chat_history
 router = APIRouter()
 
 
 ai_service = AIService()
 
-@router.post("", response_model=Message)
-async def chat(message: str):
+@router.get("/",response_model=ChatHistory)
+async def get_chat(user_id: str, repo_id: str):
+    """
+    得到用户的聊天记录
+    """
+    return create_or_get_chat_history(user_id, repo_id)
+
+
+
+@router.post("/{user_id}/{repo_id}", response_model=Message)
+async def chat(message: str, user_id: str, repo_id: str):
     """
     处理用户的聊天请求
     """
     response_text = await ai_service.chat(message)
+    update_chat_history(user_id, repo_id, message, response_text)
     return Message(sayer="assistant", text=response_text)
 ''''''
-@router.post("/with-file", response_model=Message)
-async def chat_with_file(message: str, file: UploadFile = File(...)):
+@router.post("/{user_id}/{repo_id}/with-file", response_model=Message)
+async def chat_with_file(user_id: str, repo_id: str, message: str, file: UploadFile = File(...)):
     """
     处理带文件的聊天请求
     """
+    question = message
     # 结构化 - 取出excel - 风险预测 - 风险预测结果加入message
     
     current_file_path = os.path.abspath(__file__)
@@ -139,8 +150,9 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
         message = system_prompt +  message + "\n文件内容如下： " + all_files_content + "\n由于用户上传的文件信息不全，请根据用户上传的文件信息给出一定的风险建议"
     else:
         # 文件信息全，给出风险概率，并让大模型根据风险概率给出建议
-        message = system_prompt + message + "\n文件内容如下： " + all_files_content + "\n用户上传的文件诈骗概率为： " + predict_results[f'{excel_name}']
+        message = system_prompt + message + "\n文件内容如下： " + all_files_content + "\n用户上传的文件诈骗概率为： " + str(predict_results[f'{excel_name}'])
     response_text = await ai_service.chat(message)
+    update_chat_history(user_id, repo_id, question, response_text)
     return Message(sayer="assistant", text=response_text)
 
 # @router.get("/history/{user_id}", response_model=List[ChatHistory])
