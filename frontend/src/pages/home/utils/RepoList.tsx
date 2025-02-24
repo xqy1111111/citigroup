@@ -1,19 +1,10 @@
 import React from 'react';
-
-interface Repo {
-    id: string;
-    name: string;
-    desc: string;
-    owner_id: string;
-    collaborators: string[];
-    files: string[];
-    results: string[];
-}
+import { repo } from '../../../api/user.tsx';
 
 interface RepoListProps {
-    repos: Repo[];
-    onOpenSettings: (repo: Repo) => void;
-    onEnterRepo?: (repo: Repo) => void;
+    repos: repo[];
+    onOpenSettings: (repo: repo) => void;
+    onEnterRepo?: (repo: repo) => void;
 }
 
 function RepoList({ repos, onOpenSettings, onEnterRepo }: RepoListProps) {

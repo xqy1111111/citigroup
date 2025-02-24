@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext } from 'react';
-import { userData,getUser, repo, addRepo as addRepoAPI, deleteRepo as deleteRepoAPI, updateRepoName, updateRepoDesc, getRepo} from '../api/User.tsx';
+import { userData,getUser, repo, addRepo as addRepoAPI, deleteRepo as deleteRepoAPI, updateRepoName, updateRepoDesc, getRepo} from '../api/user.tsx';
 
 
 interface UserContextType {
@@ -59,7 +59,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         console.log('Received updates:', updates);
         try {
             if (updates.repos && updates.repos.length > 0) {
-                const detailedRepos: repo[] = await Promise.all(
+                let detailedRepos: repo[] = await Promise.all(
                     updates.repos.map(async (repoID) => {
                         try {
                             const repoDetail:repo = await getRepo(repoID);
@@ -70,7 +70,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                         }
                     })
                 );
-                
+                detailedRepos = detailedRepos.filter(repo => repo.id !== "");
                 // 一起更新两个状态
                 await Promise.all([
                     setUserState(updates),
@@ -151,6 +151,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setreposState(defaultReposList);
     };
 
+    //这里就是对外的接口列表
     const value: UserContextType = {
         user: userState,
         repos: reposState,
