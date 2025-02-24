@@ -16,13 +16,14 @@ def convert_objectid(obj: Any):
         return [convert_objectid(item) for item in obj]
     elif isinstance(obj, dict):
         return {key: convert_objectid(value) for key, value in obj.items()}
-    return obj
+    return str(obj)
 
 def objectID2str(repo: Dict) -> RepoResponse:
     """
     处理 MongoDB 查询返回的 Repo 数据，将所有 ObjectId 转换为字符串
     """
     repo = convert_objectid(repo)  # 深度转换 ObjectId
+    print(repo)
     return RepoResponse(
         id=repo["_id"],
         name=repo["name"],
