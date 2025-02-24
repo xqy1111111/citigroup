@@ -4,7 +4,7 @@ import { MenuBar } from "../components/MenuBar/MenuBar";
 import { NavigationBar } from "../components/NavigationBar/NavigationBar";
 import { Sidebar } from "../components/Sidebar/Sidebar";
 import { request } from "../utils/request";
-import { API_CONFIG } from "../api/api";
+import { config } from "../config/api";
 import "./Info.css";
 
 interface InfoItem {
@@ -35,10 +35,10 @@ export function Info() {
       }
 
       try {
-        const response = await request(API_CONFIG.ENDPOINTS.PROCESS(fileId), {
+        const response = await request(config.processUrl(fileId), {
           method: 'POST',
         });
-        
+
         // 假设后端返回的数据结构与我们需要的格式相同
         // 如果不同，需要在这里进行数据转换
         setSections(response.data);
