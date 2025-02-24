@@ -210,7 +210,7 @@ def upload_res_file(repo_id: str, file_obj, source_file_id,filename: str, source
 
 
     file_info = {
-        "source_file_id": str(source_file_id),
+        "source_file": ObjectId(source_file_id),
         "file_id": ObjectId(file_id),
         "filename": filename,
         "size": file_size,
@@ -225,7 +225,7 @@ def upload_res_file(repo_id: str, file_obj, source_file_id,filename: str, source
 
     return str(file_id)
 
-def upload_file(repo_id: str, file_obj, filename: str, source=True):
+def upload_source_file(repo_id: str, file_obj, filename: str, source=True):
     """
     上传文件到 GridFS，并更新 repo 的 files 或 results 列表
     :param repo_id: 仓库 ID
@@ -244,6 +244,7 @@ def upload_file(repo_id: str, file_obj, filename: str, source=True):
 
 
     file_info = {
+        "source_file": False,
         "file_id": ObjectId(file_id),
         "filename": filename,
         "size": file_size,
