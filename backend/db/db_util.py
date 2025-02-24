@@ -328,5 +328,67 @@ def update_file_status(repo_id: str, file_id: str, new_status: str = "complete",
     return "success"
 
 
+def create_or_get_chat_history(user_id: str, repo_id: str):
+    """
+    创建一个新的 chat_history，如果已存在则返回已有的 chat 记录。
+    
+    :param user_id: 用户的 id
+    :param repo_id: 仓库的 id
+    :return: 返回 chat 的 MongoDB _id（字符串格式），以及已有的 chat 记录
+    """
+    
+    user_id_obj = ObjectId(user_id)
+    repo_id_obj = ObjectId(repo_id)
+
+    # 查询是否已有记录
+    existing_chat = db.chats.find_one({"user_id": user_id_obj, "repo_id": repo_id_obj})
+    if existing_chat:
+        existing_chat["_id"] = str(existing_chat["_id"])  # 转换 ObjectId 为字符串
+        return existing_chat  # 直接返回已有的 chat 记录
+    
+    # 创建新记录
+    chat_history = {
+        "user_id": user_id_obj,
+        "repo_id": repo_id_obj,
+        "texts": [],  # 初始化为空的聊天记录
+    }
+    result = db.chats.insert_one(chat_history)
+    
+    # 返回新插入的 chat 记录
+    chat_history["_id"] = str(result.inserted_id)
+    return chat_history
+
+
+def create_json_res(file_id: str, json_content):
+    """
+    创建一个json格式的结果
+    :param file_id: 文件的id
+    :param json_content: json格式的结果
+    :return: 新生成的json_res的_id
+    """
+    file_id_obj = ObjectId(file_id)
+
+    file_json = {
+        "file_id": file_id_obj, 
+        "content": json_content   
+    }
+
+    result = db.json_res.insert_one(file_json)
+    return str(result.inserted_id)
+
+
+def get_json_res(file_id: str):
+    """
+    返回json格式的结果
+    :param file_id: 文件的id(注意这里是结果文件的id而不是json_res的id)
+    :return: 对应的json_res，如果结果不存在则返回None
+    """
+    file_id_obj = ObjectId(file_id)
+    json_res = db.json_res.find_one({"file_id": file_id_obj})
+    if json_res:
+        json_res["_id"] = str(json_res["_id"])  # 转换 ObjectId 为字符串
+        return json_res  # 直接返回已有的 chat 记录
+    return None
+
 
 
