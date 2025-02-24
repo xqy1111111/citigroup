@@ -109,7 +109,7 @@ async def chat_with_file(message: str, file: UploadFile = File(...)):
             os.remove(os.path.join(predict_folder, _file_name))
     
     for _file_name in os.listdir(target_folder):
-        shutil.move(os.path.join(target_folder, _file_name), os.path.join(predict_folder, _file_name))
+        shutil.copy(os.path.join(target_folder, _file_name), os.path.join(predict_folder, _file_name))
 
     predict_results = predict_all()
     print("\n\n\n")

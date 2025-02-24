@@ -9,8 +9,10 @@ def process_target_to_json():
     current_path = os.path.abspath(__file__)
     print(f"本文件的路径是: {current_path}\n")
     # 然后相对于本文件的路径
-    target_path = os.path.join(current_path, "../DataStructuring/DataStructuring/TargetData")
-    json_path = os.path.join(current_path, "../DataStructuring/DataStructuring/JsonData")
+    base_path = os.path.dirname(current_path)
+   
+    target_path = os.path.join(base_path, "DataStructuring", "DataStructuring", "TargetData")
+    json_path = os.path.join(base_path, "DataStructuring", "DataStructuring", "JsonData")
     print(f"目标文件夹的绝对路径是: {target_path}")
 
     # 然后，遍历target文件夹中的所有xlsx文件
