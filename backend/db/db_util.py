@@ -191,7 +191,41 @@ def add_collaborator(repo_id, collaborator_id):
     return "success"  # 成功添加协作者
 
 # =============================== 文件相关操作 ===============================
-def upload_file(repo_id: str, file_obj, filename: str, source=True):
+def upload_res_file(repo_id: str, file_obj, source_file_id,filename: str, source=False):
+    """
+    上传结果文件到 GridFS，并更新 repo 的 files 或 results 列表
+    :param repo_id: 仓库 ID
+    :param file_obj: 需要上传的文件对象（二进制流）
+    :param filename: 文件名
+    :param source: 如果 source=True 则更新 files 列表，如果为 False 则更新 results 列表
+    :return: 成功返回文件 ID，失败返回 None
+    """
+    repo = db.repos.find_one({"_id": ObjectId(repo_id)})
+    if not repo:
+        return None  # 仓库不存在
+
+    file_content = file_obj.read()
+    file_id = fs.put(file_content, filename=filename)
+    file_size = len(file_content)
+
+
+    file_info = {
+        "source_file": ObjectId(source_file_id),
+        "file_id": ObjectId(file_id),
+        "filename": filename,
+        "size": file_size,
+        "uploaded_at": datetime.now(UTC),
+        "status": "uploaded"
+    }
+
+    db.repos.update_one(
+        {"_id": ObjectId(repo_id)},
+        {"$push": {"files" if source else "results": file_info}}
+    )
+
+    return str(file_id)
+
+def upload_source_file(repo_id: str, file_obj, filename: str, source=True):
     """
     上传文件到 GridFS，并更新 repo 的 files 或 results 列表
     :param repo_id: 仓库 ID
@@ -208,7 +242,9 @@ def upload_file(repo_id: str, file_obj, filename: str, source=True):
     file_id = fs.put(file_content, filename=filename)
     file_size = len(file_content)
 
+
     file_info = {
+        "source_file": False,
         "file_id": ObjectId(file_id),
         "filename": filename,
         "size": file_size,
@@ -222,7 +258,6 @@ def upload_file(repo_id: str, file_obj, filename: str, source=True):
     )
 
     return str(file_id)
-
 
 def get_file_metadata_by_id(repo_id: str, file_id: str, source=True):
     """
