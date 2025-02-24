@@ -2,7 +2,9 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Chat from './pages/chat/Chat';
 import Home from './pages/home/Home';
+import { General } from './pages/general/General.tsx';
 import { UserProvider } from './utils/UserContext.tsx';
+import { Info } from './pages/info/Info.tsx';
 
 function App() {
   return (
@@ -13,7 +15,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />
             <Route path="/chat" element={<Chat />} />
-            <Route path="/project" element={<h1>项目页面</h1>} />
+            <Route path="/repo" element={<General />} />
+            <Route path="/repo/:fileId" element={<Info />} />
           </Routes>
         </div>
       </Router>

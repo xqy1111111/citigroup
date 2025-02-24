@@ -1,15 +1,9 @@
 import axios from "axios";
-
-// 使用相对路径，将通过代理转发到后端
-export const API_BASE_URL = '';
+import { config } from "../config/api";
 
 export const request = axios.create(
   {
-    baseURL: API_BASE_URL,
-    headers: {
-      'accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
+    baseURL: config.baseUrl,
     // 允许跨域携带cookie
     withCredentials: true
   }

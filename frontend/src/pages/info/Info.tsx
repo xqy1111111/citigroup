@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { MenuBar } from "../components/MenuBar/MenuBar";
-import { NavigationBar } from "../components/NavigationBar/NavigationBar";
-import { Sidebar } from "../components/Sidebar/Sidebar";
-import { request } from "../utils/request";
-import { config } from "../config/api";
+import { MenuBar } from "../../components/MenuBar/MenuBar";
+import { NavigationBar } from "../../components/NavigationBar/NavigationBar";
+import { Sidebar } from "../../components/Sidebar/Sidebar";
+import { request } from "../../utils/request";
+import { config } from "../../config/api";
 import "./Info.css";
 
 interface InfoItem {
@@ -35,7 +35,7 @@ export function Info() {
       }
 
       try {
-        const response = await request(config.processUrl(fileId), {
+        const response = await request(`/process/${fileId}/process`, {
           method: 'POST',
         });
 

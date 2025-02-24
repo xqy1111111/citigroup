@@ -1,7 +1,7 @@
 import React from "react";
-import { MenuBar } from "../components/MenuBar/MenuBar";
-import { NavigationBar } from "../components/NavigationBar/NavigationBar";
-import { Sidebar } from "../components/Sidebar/Sidebar";
+import { MenuBar } from "../../components/MenuBar/MenuBar";
+import { NavigationBar } from "../../components/NavigationBar/NavigationBar";
+import { Sidebar } from "../../components/Sidebar/Sidebar";
 import "./General.css";
 
 export function General() {
@@ -15,7 +15,7 @@ export function General() {
           <div className="content-header">
             <h1>仪表盘概览</h1>
           </div>
-          
+
           <div className="stats-container">
             <div className="stat-card">
               <div className="stat-title">总用户数</div>
@@ -54,7 +54,7 @@ export function General() {
                 <div className="chart-placeholder">图表区域</div>
               </div>
             </div>
-            
+
             <div className="chart-card">
               <div className="chart-header">
                 <h3>收入分析</h3>
