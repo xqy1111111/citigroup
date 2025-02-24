@@ -14,6 +14,7 @@ import glob
 from services.risk_prediction.prediction import predict_all
 
 from db.db_util import create_or_get_chat_history,update_chat_history
+from .repo import convert_objectid
 router = APIRouter()
 
 
@@ -24,7 +25,8 @@ async def get_chat(user_id: str, repo_id: str):
     """
     得到用户的聊天记录
     """
-    return create_or_get_chat_history(user_id, repo_id)
+
+    return convert_objectid(create_or_get_chat_history(user_id, repo_id))
 
 
 

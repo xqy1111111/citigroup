@@ -11,23 +11,17 @@ class MessageBase(BaseModel):
 class Message(MessageBase):
     pass
 
-class ChatHistoryBase(BaseModel):
-    user_id: str
 
-class ChatHistoryCreate(ChatHistoryBase):
-    pass
-
-class ChatHistoryInDB(ChatHistoryBase):
-    chat_history_id: str = Field(default_factory=lambda: str(ObjectId()))
-    messages: List[Message] = []
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
-
-class ChatHistory(ChatHistoryBase):
-    chat_history_id: str
-    messages: List[Message]
-    created_at: datetime
-    updated_at: datetime
-
+class text(BaseModel):
+    question: str
+    answer: str
+class ChatHistory(BaseModel):
+    user_id:str
+    repo_id:str
+    texts: List[text] = []
+    _id:str
     class Config:
-        from_attributes = True 
+        arbitrary_types_allowed = True
+
+
+    
