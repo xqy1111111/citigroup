@@ -210,7 +210,7 @@ async def chat_with_file(user_id: str, repo_id: str, message: str, file: UploadF
         message = system_prompt + message + "\n文件内容如下： " + all_files_content + "\n用户上传的文件诈骗概率为： " + str(predict_results[f'{excel_name}'])
     response_text = await ai_service.chat(message)
     response=Message(sayer="assistant", text=response_text)
-    update_chat_history(user_id, repo_id, message, response)
+    update_chat_history(user_id, repo_id, store_message, response)
     return Message(sayer="assistant", text=response_text)
 
 # @router.get("/history/{user_id}", response_model=List[ChatHistory])
