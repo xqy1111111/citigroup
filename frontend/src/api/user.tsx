@@ -40,14 +40,13 @@ export interface file {
   status: string;
 }
 
-export interface chatContext {
-  "question": string,
-  "answer": string,
-}
 export interface chatHistory{
   "user_id": string,
   "repo_id": string,
-  "texts": chatContext[]
+  "texts": {
+    "question": chat,
+    "answer": chat
+  }[]
 }
 
 export interface chat{

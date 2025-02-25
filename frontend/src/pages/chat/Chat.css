@@ -70,7 +70,7 @@
   flex-direction: row-reverse;
 }
 
-.ai-message {
+.assistant-message {
   align-self: flex-start;
   background-color: rgb(45, 45, 45);
   color: white;

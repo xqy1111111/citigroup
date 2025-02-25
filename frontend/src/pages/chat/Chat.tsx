@@ -5,11 +5,11 @@ import { MenuBar } from "../../components/MenuBar/MenuBar";
 import { NavigationBar } from "../../components/NavigationBar/NavigationBar";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { useUser } from "../../utils/UserContext.tsx";
-import { chat, chatContext, chatHistory, getChatHistory, getChat, getChatWithFile } from "../../api/user";
+import { chat, chatHistory, getChatHistory, getChat, getChatWithFile } from "../../api/user";
 
 interface ChatMessage {
     content: string;
-    type: 'ai' | 'user';
+    type: string;
 }
 
 interface QuickInput {
@@ -35,10 +35,10 @@ function Chat() {
             try {
                 const history = await getChatHistory(user.id, currentRepo.id);
                 let formattedMessages: ChatMessage[] = history.texts.flatMap(text => [
-                    { content: text.question, type: "user" },
-                    { content: text.answer, type: "ai" }
+                    { content: text.question.text, type: text.question.sayer },
+                    { content: text.answer.text, type: text.answer.sayer }
                 ]);
-                formattedMessages = [{ content: "你好，我可以回答您的任何问题！", type: "ai" }, ...formattedMessages];
+                formattedMessages = [{ content: "你好，我可以回答您的任何问题！", type: "assistant" }, ...formattedMessages];
                 setMessages(formattedMessages);
             } catch (error) {
                 console.error("获取聊天历史失败:", error);
@@ -69,7 +69,7 @@ function Chat() {
             type: "user",
         };
 
-        setMessages((prev) => [...prev, userMessage, {content: "正在思考中...", type: "ai"}]);
+        setMessages((prev) => [...prev, userMessage, {content: "正在思考中...", type: "assistant"}]);
         setInputValue("");
         setIsTyping(true);
 
@@ -84,7 +84,7 @@ function Chat() {
 
     const typeWriterEffect = (text: string) => {
         let index = 0;
-        const aiMessage: ChatMessage = { content: "", type: "ai" };
+        const aiMessage: ChatMessage = { content: "", type: "assistant" };
 
         setMessages((prev) => [...prev, aiMessage]);
 
@@ -126,7 +126,7 @@ function Chat() {
                                 <div key={index} className={`message ${message.type}-message`}>
                                     <img
                                         src={
-                                            message.type === "ai"
+                                            message.type === "assistant"
                                                 ? "/public/robot.svg"
                                                 : "/public/user.svg"
                                         }
@@ -156,7 +156,6 @@ function Chat() {
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyPress={handleKeyPress}
                                 placeholder="输入消息，按Enter发送..."
-                                disabled={isTyping}
                             />
                             <button onClick={handleSendMessage} className="send-button" disabled={isTyping}>
                                 发送
