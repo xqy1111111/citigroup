@@ -62,3 +62,5 @@ backend/services/DataStructuring/DataStructuring/JsonData/*
 backend/services/DataStructuring/DataStructuring/SourceData/*
 backend/services/DataStructuring/DataStructuring/TextData/*
 backend/services/DataStructuring/DataStructuring/TargetData/*
+backend/services/risk_prediction/SourceData/*
+backend/services/DataStructuring/DataStructuring/InputData_for_ShenZijun/
