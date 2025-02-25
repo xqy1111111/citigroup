@@ -13,7 +13,7 @@ from db.db_util import (
     get_json_res
 )
 
-from models._file import FileMetadata
+from models._file import FileMetadata, JsonRes
 
 router = APIRouter()
 
@@ -116,4 +116,7 @@ async def get_json_res_api(file_id: str):
     获得文件解析的json结果
     如果没有结果则返回None
     """
-    return get_json_res(file_id)
+    json_res = get_json_res(file_id)
+    if json_res == None:
+        raise HTTPException(status_code=404, detail="Res not found, have you process or pass in the right file_id?")
+    return JsonRes(res_id=str(json_res.get("_id")), file_id=str(json_res.get("file_id")), content=json_res.get("content"))
