@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict
 from datetime import datetime
 
 # models.py
@@ -12,3 +12,8 @@ class FileMetadata(BaseModel):
     size: int
     upload_date: datetime
     status: str
+
+class JsonRes(BaseModel):
+    res_id: str
+    file_id: str
+    content: Dict

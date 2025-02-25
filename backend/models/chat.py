@@ -13,8 +13,8 @@ class Message(MessageBase):
 
 
 class text(BaseModel):
-    question: str
-    answer: str
+    question: Message
+    answer: Message
 class ChatHistory(BaseModel):
     user_id:str
     repo_id:str

@@ -9,10 +9,11 @@ from db.db_util import (
     get_file_metadata_by_id,
     delete_file,
     download_file,
-    update_file_status
+    update_file_status,
+    get_json_res
 )
 
-from models._file import FileMetadata
+from models._file import FileMetadata, JsonRes
 
 router = APIRouter()
 
@@ -107,3 +108,16 @@ async def update_file_status_api(repo_id: str,
     if result == "not found":
         raise HTTPException(status_code=404, detail="File not found")
     return f"File {file_id} status updated to {new_status}"
+
+
+@router.get("/json_res/{file_id}")
+async def get_json_res_api(file_id: str):
+    """
+    获得文件解析的json结果
+    如果没有产生结果则将status code设置为404
+    注意：这里传的是源文件的file_id，而不是生成结果的file_id，也不是json_res 的 _id
+    """
+    json_res = get_json_res(file_id)
+    if json_res == None:
+        raise HTTPException(status_code=404, detail="Res not found, have you process or pass in the right file_id?")
+    return JsonRes(res_id=str(json_res.get("_id")), file_id=str(json_res.get("file_id")), content=json_res.get("content"))
