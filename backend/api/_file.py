@@ -114,7 +114,7 @@ async def update_file_status_api(repo_id: str,
 async def get_json_res_api(file_id: str):
     """
     获得文件解析的json结果
-    如果没有结果则返回None
+    如果没有产生结果则将status code设置为404
     """
     json_res = get_json_res(file_id)
     if json_res == None:
