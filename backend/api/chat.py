@@ -1,4 +1,6 @@
 
+import ast
+import json
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from typing import List
 from models.chat import ChatHistory, Message
@@ -19,7 +21,7 @@ router = APIRouter()
 
 
 ai_service = AIService()
-@router.get("/", response_model=ChatHistory)
+@router.get("/")
 async def get_chat(user_id: str, repo_id: str):
     """
     获取指定用户和仓库的聊天记录。
@@ -31,7 +33,25 @@ async def get_chat(user_id: str, repo_id: str):
     返回:
         ChatHistory: 聊天记录对象。
     """
-    return convert_objectid(create_or_get_chat_history(user_id, repo_id))
+    chat_history = create_or_get_chat_history(user_id, repo_id)
+    
+    print("\n\n\n")
+    print(chat_history)
+    print("\n\n\n")
+    print(type(chat_history))
+    
+        
+    chat_history = convert_objectid(chat_history)
+    
+    # 将 texts 中的每个对象转换为字典
+    for text in chat_history["texts"]:
+        print(text)
+        text["question"] = text["question"].replace("'", '"')
+        text["answer"] = text["answer"].replace("'", '"')
+        text["question"] = json.loads(text["question"])
+        text["answer"] = json.loads(text["answer"])
+    
+    return chat_history
 
 
 @router.post("/{user_id}/{repo_id}", response_model=Message)
@@ -47,9 +67,12 @@ async def chat(message: str, user_id: str, repo_id: str):
     返回:
         Message: 助手的响应消息。
     """
+   
     response_text = await ai_service.chat(message)
     create_or_get_chat_history(user_id, repo_id)
-    update_chat_history(user_id, repo_id, message, response_text)
+    message =Message(sayer="user", text=message)
+    response=Message(sayer="assistant", text=response_text)
+    update_chat_history(user_id, repo_id, message, response)
     return Message(sayer="assistant", text=response_text)
 
 
@@ -76,6 +99,7 @@ async def chat_with_file(user_id: str, repo_id: str, message: str, file: UploadF
     """
     create_or_get_chat_history(user_id, repo_id)
     question = message
+    store_message = Message(sayer="user", text=message)
     # 结构化 - 取出excel - 风险预测 - 风险预测结果加入message
     
     current_file_path = os.path.abspath(__file__)
@@ -185,7 +209,8 @@ async def chat_with_file(user_id: str, repo_id: str, message: str, file: UploadF
         # 文件信息全，给出风险概率，并让大模型根据风险概率给出建议
         message = system_prompt + message + "\n文件内容如下： " + all_files_content + "\n用户上传的文件诈骗概率为： " + str(predict_results[f'{excel_name}'])
     response_text = await ai_service.chat(message)
-    update_chat_history(user_id, repo_id, question, response_text)
+    response=Message(sayer="assistant", text=response_text)
+    update_chat_history(user_id, repo_id, message, response)
     return Message(sayer="assistant", text=response_text)
 
 # @router.get("/history/{user_id}", response_model=List[ChatHistory])

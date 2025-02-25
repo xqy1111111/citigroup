@@ -5,6 +5,7 @@ import hashlib
 from gridfs import GridFS
 from datetime import datetime, UTC
 from db import db_config
+from models.chat import Message
 
 # 初始化MongoDB客户端
 client = MongoClient(db_config.DB_URL)
@@ -393,7 +394,7 @@ def create_or_get_chat_history(user_id: str, repo_id: str):
     chat_history["_id"] = str(result.inserted_id)
     return chat_history
 
-def update_chat_history(user_id: str, repo_id: str, question: str, answer:str):
+def update_chat_history(user_id: str, repo_id: str, question: Message, answer:Message):
     """
     往对应的 chat_history 里面新增一条 text 记录。
     
@@ -409,11 +410,20 @@ def update_chat_history(user_id: str, repo_id: str, question: str, answer:str):
     
     if not chat:
         return {"error": "Chat history not found."}
-
+    question_dict = {
+        "sayer": question.sayer,
+        "text": question.text,
+        "timestamp": question.timestamp.isoformat()
+    }
+    answer_dict = {
+        "sayer": answer.sayer,
+        "text": answer.text,
+        "timestamp": answer.timestamp.isoformat()
+    }
     # 更新 chat_history，追加新的 text
     text = {
-        "question": question,
-        "answer": answer
+        "question": str(question_dict),
+        "answer": str(answer_dict)
     }
     db.chats.update_one(
         {"user_id": user_id_obj, "repo_id": repo_id_obj},
