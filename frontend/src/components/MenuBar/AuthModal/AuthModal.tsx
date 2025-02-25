@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { userLogin, loginData, getUser, userRegister } from '../../../api/User.tsx';
+import { userLogin, loginData, getUser, userRegister } from '../../../api/user.tsx';
 import './AuthModal.css';
 
 interface AuthModalProps {
