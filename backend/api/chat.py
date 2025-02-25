@@ -1,5 +1,6 @@
 
 import ast
+from datetime import datetime
 import json
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from typing import List
@@ -67,13 +68,13 @@ async def chat(message: str, user_id: str, repo_id: str):
     返回:
         Message: 助手的响应消息。
     """
-   
+    messageObj =Message(sayer="user", text=message,timestamp=datetime.now())
     response_text = await ai_service.chat(message)
     create_or_get_chat_history(user_id, repo_id)
-    message =Message(sayer="user", text=message)
-    response=Message(sayer="assistant", text=response_text)
-    update_chat_history(user_id, repo_id, message, response)
-    return Message(sayer="assistant", text=response_text)
+    
+    response=Message(sayer="assistant", text=response_text,timestamp=datetime.now())
+    update_chat_history(user_id, repo_id, messageObj, response)
+    return response
 
 
 @router.post("/{user_id}/{repo_id}/with-file", response_model=Message)
@@ -99,7 +100,7 @@ async def chat_with_file(user_id: str, repo_id: str, message: str, file: UploadF
     """
     create_or_get_chat_history(user_id, repo_id)
     question = message
-    store_message = Message(sayer="user", text=message)
+    store_message = Message(sayer="user", text=message,timestamp=datetime.now())
     # 结构化 - 取出excel - 风险预测 - 风险预测结果加入message
     
     current_file_path = os.path.abspath(__file__)
@@ -209,9 +210,9 @@ async def chat_with_file(user_id: str, repo_id: str, message: str, file: UploadF
         # 文件信息全，给出风险概率，并让大模型根据风险概率给出建议
         message = system_prompt + message + "\n文件内容如下： " + all_files_content + "\n用户上传的文件诈骗概率为： " + str(predict_results[f'{excel_name}'])
     response_text = await ai_service.chat(message)
-    response=Message(sayer="assistant", text=response_text)
+    response=Message(sayer="assistant", text=response_text,timestamp=datetime.now())
     update_chat_history(user_id, repo_id, store_message, response)
-    return Message(sayer="assistant", text=response_text)
+    return response
 
 # @router.get("/history/{user_id}", response_model=List[ChatHistory])
 # async def get_chat_history_list(user_id: str):
