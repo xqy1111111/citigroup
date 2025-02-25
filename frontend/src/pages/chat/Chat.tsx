@@ -18,9 +18,10 @@ interface QuickInput {
 }
 
 function Chat() {
-    const { user ,currentRepo} = useUser();
+    const { user, currentRepo } = useUser();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputValue, setInputValue] = useState<string>("");
+    const [isTyping, setIsTyping] = useState<boolean>(false);
     const chatHistoryRef = React.useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -34,10 +35,10 @@ function Chat() {
             try {
                 const history = await getChatHistory(user.id, currentRepo.id);
                 let formattedMessages: ChatMessage[] = history.texts.flatMap(text => [
-                    { content: text.question, type: "user" },  // 将问题作为用户消息
-                    { content: text.answer, type: "ai" }       // 将答案作为AI消息
+                    { content: text.question, type: "user" },
+                    { content: text.answer, type: "ai" }
                 ]);
-                formattedMessages = [{ content: "你好，我可以回答您的任何问题！" , type: "ai"},...formattedMessages]
+                formattedMessages = [{ content: "你好，我可以回答您的任何问题！", type: "ai" }, ...formattedMessages];
                 setMessages(formattedMessages);
             } catch (error) {
                 console.error("获取聊天历史失败:", error);
@@ -45,16 +46,16 @@ function Chat() {
         };
 
         fetchChatHistory();
-    },[]);
+    }, []);
 
     const quickInputs: QuickInput[] = [
-            { id: 1, text: "你好，请问..." },
-            { id: 2, text: "能帮我解释一下..." },
-            { id: 3, text: "如何实现..." },
-            { id: 4, text: "有什么建议..." },
-            { id: 5, text: "有什么建议..." },
-            { id: 6, text: "有什么建议..." },
-        ];
+        { id: 1, text: "你好，请问..." },
+        { id: 2, text: "能帮我解释一下..." },
+        { id: 3, text: "如何实现..." },
+        { id: 4, text: "有什么建议..." },
+        { id: 5, text: "有什么建议..." },
+        { id: 6, text: "有什么建议..." },
+    ];
 
     const handleQuickInput = (text: string): void => {
         setInputValue(text);
@@ -68,15 +69,39 @@ function Chat() {
             type: "user",
         };
 
-        setMessages((prev) => [...prev, userMessage]);
+        setMessages((prev) => [...prev, userMessage, {content: "正在思考中...", type: "ai"}]);
         setInputValue("");
+        setIsTyping(true);
 
         try {
             const response = await getChat(user.id, currentRepo.id, inputValue);
-            setMessages((prev) => [...prev, {content: response.text, type: "ai"}]);
+            setMessages((prev) => [...prev.slice(0, prev.length-1)]);
+            typeWriterEffect(response.text);
         } catch (error) {
             console.error("发送消息失败:", error);
         }
+    };
+
+    const typeWriterEffect = (text: string) => {
+        let index = 0;
+        const aiMessage: ChatMessage = { content: "", type: "ai" };
+
+        setMessages((prev) => [...prev, aiMessage]);
+
+        const interval = setInterval(() => {
+            if (index < text.length) {
+                aiMessage.content += text.charAt(index);
+                setMessages((prev) => {
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1] = aiMessage;
+                    return newMessages;
+                });
+                index++;
+            } else {
+                clearInterval(interval);
+                setIsTyping(false);
+            }
+        }, 33); //33MS刷新一个字符
     };
 
     const handleKeyPress = (
@@ -131,8 +156,9 @@ function Chat() {
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyPress={handleKeyPress}
                                 placeholder="输入消息，按Enter发送..."
+                                disabled={isTyping}
                             />
-                            <button onClick={handleSendMessage} className="send-button">
+                            <button onClick={handleSendMessage} className="send-button" disabled={isTyping}>
                                 发送
                             </button>
                         </div>
