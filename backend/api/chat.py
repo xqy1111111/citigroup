@@ -19,31 +19,60 @@ router = APIRouter()
 
 
 ai_service = AIService()
-
-@router.get("/",response_model=ChatHistory)
+@router.get("/", response_model=ChatHistory)
 async def get_chat(user_id: str, repo_id: str):
     """
-    得到用户的聊天记录
+    获取指定用户和仓库的聊天记录。
+
+    参数:
+        user_id (str): 用户的ID。
+        repo_id (str): 仓库的ID。
+
+    返回:
+        ChatHistory: 聊天记录对象。
     """
-
     return convert_objectid(create_or_get_chat_history(user_id, repo_id))
-
 
 
 @router.post("/{user_id}/{repo_id}", response_model=Message)
 async def chat(message: str, user_id: str, repo_id: str):
     """
-    处理用户的聊天请求
+    处理用户的聊天请求。
+
+    参数:
+        message (str): 用户发送的消息。
+        user_id (str): 用户的ID。
+        repo_id (str): 仓库的ID。
+
+    返回:
+        Message: 助手的响应消息。
     """
     response_text = await ai_service.chat(message)
     get_chat(user_id, repo_id)
     update_chat_history(user_id, repo_id, message, response_text)
     return Message(sayer="assistant", text=response_text)
-''''''
+
+
 @router.post("/{user_id}/{repo_id}/with-file", response_model=Message)
 async def chat_with_file(user_id: str, repo_id: str, message: str, file: UploadFile = File(...)):
     """
-    处理带文件的聊天请求
+    处理包含文件上传的聊天请求。
+
+    参数:
+        user_id (str): 用户的ID。
+        repo_id (str): 仓库的ID。
+        message (str): 用户发送的消息。
+        file (UploadFile): 用户上传的文件。
+
+    返回:
+        Message: 助手的响应消息。
+
+    功能:
+        1. 获取聊天记录。
+        2. 处理上传的文件并将其保存到指定目录。
+        3. 调用数据结构化和风险预测的主要处理逻辑。
+        4. 根据文件内容和风险预测结果生成系统提示。
+        5. 调用AI服务生成回复并更新聊天记录。
     """
     get_chat(user_id, repo_id)
     question = message
