@@ -25,6 +25,8 @@ export function MenuBar() {
 
   const handleLogout = () => {
     resetUser();
+    resetCurrentRepo();
+    navigate("/home");
   };
 
   return (

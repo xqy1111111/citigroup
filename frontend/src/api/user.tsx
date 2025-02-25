@@ -40,17 +40,17 @@ export interface file {
   status: string;
 }
 
-export interface chat {
+export interface chatContext {
   "question": string,
   "answer": string,
 }
 export interface chatHistory{
   "user_id": string,
   "repo_id": string,
-  "texts": chat[]
+  "texts": chatContext[]
 }
 
-export interface chatWithFile{
+export interface chat{
   "sayer": string, //"assistant"
   "text": string,
   "timestamp": string
@@ -132,4 +132,21 @@ export async function downloadFile(fileId: string): Promise<Blob> {
 
 export async function deleteFile(fileId: string): Promise<void> {
   await request.delete(`/files/${fileId}`);
+}
+
+
+//chat的api
+export async function getChatHistory(userID: string, repoId: string): Promise<chatHistory> {
+  const response = await request.get(`/chat/?user_id=${userID}&repo_id=${repoId}`) as chatHistory;
+  return response;
+}
+
+export async function getChat(userID: string, repoId: string,message: string): Promise<chat> {
+  const response = await request.post(`/chat/${userID}/${repoId}?message=${message}`) as chat;
+  return response;
+}
+
+export async function getChatWithFile(userID: string, repoId: string, fileId: string): Promise<chat> {
+  const response = await request.post(`/chat/file?repo_id=${repoId}&file_id=${fileId}`) as chat;
+  return response;
 }

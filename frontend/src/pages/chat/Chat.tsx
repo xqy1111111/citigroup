@@ -1,18 +1,15 @@
 import "../reset.css";
 import "./Chat.css";
-import React from "react";
-import { useState, useRef, useEffect } from "react";
+import React, { useEffect, useState } from 'react';
 import { MenuBar } from "../../components/MenuBar/MenuBar";
 import { NavigationBar } from "../../components/NavigationBar/NavigationBar";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { useUser } from "../../utils/UserContext.tsx";
+import { chat, chatContext, chatHistory, getChatHistory, getChat, getChatWithFile } from "../../api/user";
 
 interface ChatMessage {
     content: string;
     type: 'ai' | 'user';
-    timestamp: string;
-    username?: string;
-    profile_picture?: string;
 }
 
 interface QuickInput {
@@ -21,26 +18,35 @@ interface QuickInput {
 }
 
 function Chat() {
-    const { user } = useUser();
-    // 存储聊天记录
-    const [messages, setMessages] = useState<ChatMessage[]>([{
-        content: `欢迎 ${user.username}，来询问我相关问题吧！`,
-        type: "ai",
-        timestamp: new Date().toLocaleTimeString(),
-    }]);
-    // 存储输入框的值
+    const { user ,currentRepo} = useUser();
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputValue, setInputValue] = useState<string>("");
-    // 创建聊天历史区域的引用
-    const chatHistoryRef = useRef<HTMLDivElement | null>(null);
+    const chatHistoryRef = React.useRef<HTMLDivElement | null>(null);
 
-    // 自动滚动到最新消息
     useEffect(() => {
         if (chatHistoryRef.current) {
             chatHistoryRef.current.scrollTop = chatHistoryRef.current.scrollHeight;
         }
     }, [messages]);
 
-    // 快捷输入选项
+    useEffect(() => {
+        const fetchChatHistory = async () => {
+            try {
+                const history = await getChatHistory(user.id, currentRepo.id);
+                let formattedMessages: ChatMessage[] = history.texts.flatMap(text => [
+                    { content: text.question, type: "user" },  // 将问题作为用户消息
+                    { content: text.answer, type: "ai" }       // 将答案作为AI消息
+                ]);
+                formattedMessages = [{ content: "你好，我可以回答您的任何问题！" , type: "ai"},...formattedMessages]
+                setMessages(formattedMessages);
+            } catch (error) {
+                console.error("获取聊天历史失败:", error);
+            }
+        };
+
+        fetchChatHistory();
+    },[]);
+
     const quickInputs: QuickInput[] = [
             { id: 1, text: "你好，请问..." },
             { id: 2, text: "能帮我解释一下..." },
@@ -50,36 +56,29 @@ function Chat() {
             { id: 6, text: "有什么建议..." },
         ];
 
-    // 处理快捷输入点击
     const handleQuickInput = (text: string): void => {
         setInputValue(text);
     };
 
-    // 处理发送消息
     const handleSendMessage = async (): Promise<void> => {
         if (!inputValue.trim()) return;
 
-        // 添加用户消息到聊天记录
         const userMessage: ChatMessage = {
             content: inputValue,
             type: "user",
-            timestamp: new Date().toLocaleTimeString(),
-            username: user.username,
-            profile_picture: user.profile_picture,
         };
+
         setMessages((prev) => [...prev, userMessage]);
         setInputValue("");
 
-        // 模拟AI回复
-        const aiMessage: ChatMessage = {
-            content: `回复 ${user.username}：这是一个AI回复的示例消息`,
-            type: "ai",
-            timestamp: new Date().toLocaleTimeString(),
-        };
-        setMessages((prev) => [...prev, aiMessage]);
+        try {
+            const response = await getChat(user.id, currentRepo.id, inputValue);
+            setMessages((prev) => [...prev, {content: response.text, type: "ai"}]);
+        } catch (error) {
+            console.error("发送消息失败:", error);
+        }
     };
 
-    // 处理按键事件（回车发送）
     const handleKeyPress = (
         e: React.KeyboardEvent<HTMLTextAreaElement>
     ): void => {
@@ -89,8 +88,6 @@ function Chat() {
         }
     };
 
-    // ... 其余代码保持不变 ...
-    // existing code...
     return (
         <div className="Container">
             <MenuBar />
@@ -113,7 +110,6 @@ function Chat() {
                                     />
                                     <div className="message-content-wrapper">
                                         <div className="message-content">{message.content}</div>
-                                        <div className="message-timestamp">{message.timestamp}</div>
                                     </div>
                                 </div>
                             ))}
