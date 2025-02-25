@@ -1,54 +1,50 @@
 import React from "react";
+import { useUser } from "../../utils/UserContext";
+import { useNavigate } from "react-router-dom";
 import "./Sidebar.css";
 import "../../styles/icons.css";
 
-export const Sidebar = () => {
+export function Sidebar() {
+  const { currentRepo, repos, setCurrentRepo } = useUser();
+  const navigate = useNavigate();
+
+  const handleRepoClick = (repo) => {
+    if (repo.id !== currentRepo.id) { // 只在点击不同的仓库时更新
+      setCurrentRepo(repo);
+      navigate(`/repo/${repo.id}`);
+    }
+  };
+
   return (
     <div className="sidebar">
-      <div className="sidebar-title">资源管理器</div>
-      <div className="sidebar-section">
-        <div className="section-header">
-          <span className="section-arrow">▼</span>
-          <span className="section-name">打开的编辑器</span>
-        </div>
-        <div className="section-content">
-          <div className="file-entry active">
-            <i className="icon-file-code"></i>
-            <span>index.tsx</span>
+      <div className="current-repo">
+        <h3>当前仓库: {currentRepo.id ? currentRepo.name : "无"}</h3>
+        {currentRepo.files.length > 0 ? (
+          <div className="file-list">
+            {currentRepo.files.map(file => (
+              <div key={file.file_id} className="sidebar-repo-item">
+                {file.filename}
+              </div>
+            ))}
           </div>
-          <div className="file-entry">
-            <i className="icon-file-code"></i>
-            <span>General.tsx</span>
-          </div>
-        </div>
+        ) : (
+          <div className="no-files">该仓库没有文件</div>
+        )}
       </div>
 
-      <div className="sidebar-section">
-        <div className="section-header">
-          <span className="section-arrow">▼</span>
-          <span className="section-name">my-project</span>
-        </div>
-        <div className="section-content">
-          <div className="folder-entry">
-            <span className="folder-arrow">▶</span>
-            <i className="icon-folder"></i>
-            <span>src</span>
-          </div>
-          <div className="folder-entry open">
-            <span className="folder-arrow">▼</span>
-            <i className="icon-folder-open"></i>
-            <span>components</span>
-          </div>
-          <div className="file-entry indent">
-            <i className="icon-file-code"></i>
-            <span>Button.tsx</span>
-          </div>
-          <div className="file-entry indent">
-            <i className="icon-file-code"></i>
-            <span>Card.tsx</span>
-          </div>
-        </div>
+      <div className="history-repo">
+        <h3>历史仓库</h3>
+        {repos.filter(repo => repo.id !== currentRepo.id).length > 0 ? (
+          repos.filter(repo => repo.id !== currentRepo.id).map(repo => (
+            <div key={repo.id} className="sidebar-repo-item" onClick={() => handleRepoClick(repo)}>
+              {repo.name}
+            </div>
+          ))
+        ) : (
+          <div className="no-history">没有历史仓库</div>
+        )}
       </div>
+
     </div>
   );
-}; 
+} 

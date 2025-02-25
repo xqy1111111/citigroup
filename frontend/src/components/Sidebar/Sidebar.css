@@ -1,77 +1,48 @@
 .sidebar {
-  width: 250px;
-  background-color: #252526;
-  color: white;
-  padding: 10px 0;
-  user-select: none;
-}
-
-.sidebar-title {
-  padding: 0 20px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 10px;
-  color: #8c8c8c;
-}
-
-.sidebar-section {
-  margin-bottom: 10px;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  padding: 3px 20px;
-  font-size: 11px;
-  text-transform: uppercase;
-  color: #8c8c8c;
-  cursor: pointer;
-}
-
-.section-header:hover {
+  width: 240px;
+  background-color: #1e1e1e;
+  padding: 10px;
   color: #ffffff;
 }
 
-.section-arrow {
-  font-size: 10px;
-  margin-right: 5px;
+.current-repo,
+.history-repo {
+  margin-bottom: 20px;
 }
 
-.section-content {
-  margin-top: 4px;
-}
-
-.file-entry,
-.folder-entry {
-  display: flex;
-  align-items: center;
-  padding: 3px 20px;
-  font-size: 13px;
+.sidebar-repo-item {
+  min-height: 30px;
+  padding: 8px 12px;
   cursor: pointer;
-  color: #cccccc;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  font-size: 14px;
 }
 
-.file-entry:hover,
-.folder-entry:hover {
-  background-color: #2a2a2a;
+.sidebar-repo-item:hover {
+  background-color: #3a3d3f; /* VSCode 悬停效果 */
 }
 
-.file-entry.active {
-  background-color: #37373d;
+.no-history {
+  padding: 8px 12px;
+  color: #cccccc; /* 提示文字颜色 */
+  text-align: center; /* 居中显示 */
+  font-size: 14px; /* 字体大小 */
+  border-radius: 4px; /* 圆角 */
+  background-color: #1e1e1e; /* 背景色 */
 }
 
-.file-entry i,
-.folder-entry i {
-  margin-right: 5px;
+.file-list {
+  flex: 1;
+  flex-direction: column;
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
-.folder-arrow {
-  font-size: 10px;
-  margin-right: 5px;
-  width: 10px;
-}
-
-.indent {
-  padding-left: 45px;
+.no-files {
+  padding: 8px 12px;
+  color: #cccccc; /* 提示文字颜色 */
+  text-align: center; /* 居中显示 */
+  font-size: 14px; /* 字体大小 */
+  background-color: #1e1e1e;
 }

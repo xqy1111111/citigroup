@@ -28,15 +28,24 @@ export interface repo {
   desc: string;
   owner_id: string;
   collaborators: string[];
-  files: string[];
-  results: string[];
+  files: file[];
+  results: result[];
 }
 
 export interface file {
   file_id: string;
   filename: string;
   size: number;
-  upload_date: string;
+  uploaded_at: string;
+  status: string;
+}
+
+export interface result {
+  source_file: boolean;
+  file_id: string;
+  filename: string;
+  size: number;
+  uploaded_at: string;
   status: string;
 }
 

@@ -15,8 +15,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />
             <Route path="/chat" element={<Chat />} />
-            <Route path="/repo" element={<General />} />
-            <Route path="/repo/:fileId" element={<Info />} />
+            <Route path="/repo/:repoId" element={<General />} />
+            <Route path="/repo/:repoId/:fileId" element={<Info />} />
           </Routes>
         </div>
       </Router>

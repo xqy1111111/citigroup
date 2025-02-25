@@ -1,12 +1,23 @@
-.menubar {
-  height: 30px;
-  background-color: #333333;
-  color: white;
+.menu-bar {
   display: flex;
-  <<<<<<< HEAD=======justify-content: space-between;
-  >>>>>>>a4b07901086dbc879fed0d2779666917bbd2cc46 align-items: center;
-  padding: 0 10px;
-  user-select: none;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+  background-color: #3c3c3c;
+  padding: 0 20px;
+  color: #cccccc;
+}
+
+.menu-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .menu-items {
@@ -21,13 +32,6 @@
 
 .menu-item:hover {
   opacity: 0.8;
-}
-
-.menu-right {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  height: 100%;
 }
 
 .user-info {

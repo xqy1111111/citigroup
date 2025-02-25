@@ -1,10 +1,31 @@
-import React from "react";
+import React, { useEffect, useCallback, useState } from "react";
+import { useParams } from "react-router-dom";
 import { MenuBar } from "../../components/MenuBar/MenuBar";
 import { NavigationBar } from "../../components/NavigationBar/NavigationBar";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
+import { useUser } from "../../utils/UserContext";
+import { getUser, userData } from "../../api/user";
 import "./General.css";
 
 export function General() {
+  const { repoId } = useParams<{ repoId: string }>();
+  const { currentRepo, setCurrentRepo } = useUser();
+  const [owner, setOwner] = useState<string>('');
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const fetchOwner = async () => {
+      const owner = await getUser(currentRepo.owner_id);
+      setOwner(owner.username);
+      setLoaded(true);
+    };
+    fetchOwner();
+  }, [loaded]);
+  
+  if (!loaded) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="container">
       <MenuBar />
@@ -12,58 +33,91 @@ export function General() {
         <NavigationBar />
         <Sidebar />
         <div className="content">
-          <div className="content-header">
-            <h1>仪表盘概览</h1>
-          </div>
-
           <div className="stats-container">
             <div className="stat-card">
-              <div className="stat-title">总用户数</div>
-              <div className="stat-value">12,345</div>
-              <div className="stat-change positive">+12.3%</div>
+              <div className="stat-title">项目名称</div>
+              <div className="stat-value">{currentRepo.name}</div>
+              <div className="stat-desc">所有者: {owner}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-title">活跃用户</div>
-              <div className="stat-value">5,678</div>
-              <div className="stat-change positive">+8.7%</div>
+              <div className="stat-title">项目描述</div>
+              <div className="stat-value-desc">{currentRepo.desc}</div>
+              <div className="stat-desc">创建时间: {new Date().toLocaleDateString()}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-title">总收入</div>
-              <div className="stat-value">¥89,012</div>
-              <div className="stat-change negative">-2.4%</div>
+              <div className="stat-title">文件数量</div>
+              <div className="stat-value">{currentRepo.files.length}</div>
+              <div className="stat-desc">上传文件</div>
             </div>
             <div className="stat-card">
-              <div className="stat-title">转化率</div>
-              <div className="stat-value">23.4%</div>
-              <div className="stat-change positive">+5.2%</div>
+              <div className="stat-title">结果数量</div>
+              <div className="stat-value">{currentRepo.results.length}</div>
+              <div className="stat-desc">生成结果</div>
             </div>
           </div>
 
-          <div className="charts-container">
-            <div className="chart-card">
-              <div className="chart-header">
-                <h3>用户增长趋势</h3>
-                <div className="chart-actions">
-                  <button className="chart-action">周</button>
-                  <button className="chart-action active">月</button>
-                  <button className="chart-action">年</button>
-                </div>
+          <div className="data-container">
+            <div className="data-card">
+              <div className="data-header">
+                <h3>文件列表</h3>
               </div>
-              <div className="chart-content">
-                {/* 这里放置实际的图表组件 */}
-                <div className="chart-placeholder">图表区域</div>
+              <div className="data-content">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>文件名</th>
+                      <th>大小</th>
+                      <th>上传时间</th>
+                      <th>状态</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentRepo.files.map((file) => (
+                      <tr key={file.file_id}>
+                        <td>{file.filename}</td>
+                        <td>{(file.size / 1024).toFixed(2)} KB</td>
+                        <td>{new Date(file.uploaded_at).toLocaleString()}</td>
+                        <td>
+                          <div className="status-badge processing">
+                            {(parseFloat(file.status) * 100).toFixed(1)}%
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            <div className="chart-card">
-              <div className="chart-header">
-                <h3>收入分析</h3>
-                <div className="chart-actions">
-                  <button className="chart-action">导出</button>
-                </div>
+            <div className="data-card">
+              <div className="data-header">
+                <h3>结果列表</h3>
               </div>
-              <div className="chart-content">
-                <div className="chart-placeholder">图表区域</div>
+              <div className="data-content">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>文件名</th>
+                      <th>大小</th>
+                      <th>生成时间</th>
+                      <th>状态</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentRepo.results.map((result) => (
+                      <tr key={result.file_id}>
+                        <td>{result.filename}</td>
+                        <td>{(result.size / 1024).toFixed(2)} KB</td>
+                        <td>{new Date(result.uploaded_at).toLocaleString()}</td>
+                        <td>
+                          <div className="status-badge completed">
+                            {result.status}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

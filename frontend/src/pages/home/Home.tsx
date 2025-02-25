@@ -103,7 +103,7 @@ function Home() {
     const handleEnterRepo = (repo: repo) => {
         //todo: 进入仓库(设置当前仓库)
         setCurrentRepo(repo);
-        navigate(`/repo`);
+        navigate(`/repo/${repo.id}`);
         console.log('进入仓库:', repo.name);
     };
 
