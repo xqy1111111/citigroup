@@ -9,7 +9,8 @@ from db.db_util import (
     get_file_metadata_by_id,
     delete_file,
     download_file,
-    update_file_status
+    update_file_status,
+    get_json_res
 )
 
 from models._file import FileMetadata
@@ -107,3 +108,12 @@ async def update_file_status_api(repo_id: str,
     if result == "not found":
         raise HTTPException(status_code=404, detail="File not found")
     return f"File {file_id} status updated to {new_status}"
+
+
+@router.get("/json_res/{file_id}")
+async def get_json_res_api(file_id: str):
+    """
+    获得文件解析的json结果
+    如果没有结果则返回None
+    """
+    return get_json_res(file_id)
