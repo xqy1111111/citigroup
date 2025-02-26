@@ -4,6 +4,7 @@ import { useUser } from "../../utils/UserContext";
 import "./NavigationBar.css";
 
 export function NavigationBar() {
+  const { currentRepo } = useUser();
   const navigate = useNavigate();
   const { resetCurrentRepo } = useUser();
 
@@ -13,7 +14,9 @@ export function NavigationBar() {
   };
 
   const handleChatClick = () => {
-    navigate("/chat");
+    if (currentRepo.id) {
+      navigate(`/chat`);
+    } 
   };
 
   return (
