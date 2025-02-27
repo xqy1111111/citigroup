@@ -77,11 +77,8 @@ function Chat() {
 
     const handleSendMessage = async (): Promise<void> => {
         if (!inputValue.trim()) return;
-
         const userMessage: ChatMessage = {
-            content: selectedFile 
-                ? `${inputValue} [附件: ${selectedFile.name}]` 
-                : inputValue,
+            content: selectedFile ? inputValue + " [附件: " + selectedFile?.name + "]" : inputValue,
             type: "user",
         };
 
@@ -92,7 +89,7 @@ function Chat() {
         try {
             let response;
             if (selectedFile) {
-                response = await getChatWithFile(user.id, currentRepo.id, inputValue, selectedFile);
+                response = await getChatWithFile(user.id, currentRepo.id, inputValue + " [附件: " + selectedFile?.name + "]", selectedFile);
                 setSelectedFile(null); // 清除已选择的文件
                 if (fileInputRef.current) {
                     fileInputRef.current.value = ''; // 清除文件输入框
