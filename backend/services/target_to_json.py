@@ -1,8 +1,22 @@
 # 将target文件夹中的所有xlsx文件转换为固定的json文件
 
+import time
 import os
 import pandas as pd
 import json
+
+def translate(value):
+    switch={
+       "本次交易": "current transaction",
+       "相关交易": "related transactions",
+       "操作信息": "operation information",
+       "初始账户": "initial account",
+       "目标账户": "target account",
+       "欺诈检测": "fraud detection"
+    }
+    return switch.get(value, value)
+
+
 
 def process_target_to_json():
     # 首先，获取本文件的路径
@@ -27,7 +41,14 @@ def process_target_to_json():
             
             # 遍历每一行数据
             for _, row in df.iterrows():
+
+                #time.sleep(2)#用来理解一下处理逻辑
+                #print("\n\n\n")
+                #print(_)
+                #print(row)
+                #print("\n\n\n")
                 category = row.iloc[0]
+                category=translate(category)
                 key = row.iloc[1]
                 value = row.iloc[2]
                 
