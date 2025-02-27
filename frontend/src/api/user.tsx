@@ -154,7 +154,18 @@ export async function getChat(userID: string, repoId: string,message: string): P
   return response;
 }
 
-export async function getChatWithFile(userID: string, repoId: string, fileId: string): Promise<chat> {
-  const response = await request.post(`/chat/file?repo_id=${repoId}&file_id=${fileId}`) as chat;
+export async function getChatWithFile(userID: string, repoId: string, message: string, file: File): Promise<chat> {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  const response = await request.post(
+    `/chat/${userID}/${repoId}/with-file?message=${encodeURIComponent(message)}`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  ) as chat;
   return response;
 }
