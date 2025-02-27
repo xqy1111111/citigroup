@@ -25,7 +25,7 @@ export function Sidebar() {
               <div 
                 key={file.file_id} 
                 className="sidebar-repo-item" 
-                onClick={() => navigate(`/info/${file.file_id}`)}
+                onClick={() => navigate(`/repo/${currentRepo.id}/${file.file_id}`)}
               >
                 {file.filename}
               </div>

@@ -4,7 +4,7 @@ import { MenuBar } from "../../components/MenuBar/MenuBar";
 import { NavigationBar } from "../../components/NavigationBar/NavigationBar";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { useUser } from "../../utils/UserContext";
-import { getUser, userData } from "../../api/user";
+import { getUser, userData, downloadFile } from "../../api/user";
 import "./General.css";
 
 export function General() {
@@ -12,6 +12,22 @@ export function General() {
   const { currentRepo, setCurrentRepo } = useUser();
   const [owner, setOwner] = useState<string>('');
   const [loaded, setLoaded] = useState(false);
+
+  const handleDownload = useCallback((fileId: string) => {
+    downloadFile(fileId)
+      .then((response) => {
+        const url = window.URL.createObjectURL(response);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `file_${fileId}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      })
+      .catch((error) => {
+        console.error("下载文件时出错:", error);
+      });
+  }, []);
 
   useEffect(() => {
     const fetchOwner = async () => {
@@ -101,6 +117,7 @@ export function General() {
                       <th>大小</th>
                       <th>生成时间</th>
                       <th>状态</th>
+                      <th>操作</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -113,6 +130,14 @@ export function General() {
                           <div className="status-badge completed">
                             {result.status}
                           </div>
+                        </td>
+                        <td>
+                          <button 
+                            onClick={() => handleDownload(result.file_id)}
+                            className="download-button"
+                          >
+                            下载
+                          </button>
                         </td>
                       </tr>
                     ))}

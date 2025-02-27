@@ -17,11 +17,24 @@ interface InfoSection {
   items: InfoItem[];
 }
 
+interface InfoData {
+  res_id: string;
+  file_id: string;
+  content: {
+    current_transaction: InfoItem[];
+    related_transactions: InfoItem[];
+    operation_information: InfoItem[];
+    initial_account: InfoItem[];
+    target_account: InfoItem[];
+    fraud_detection: InfoItem[];
+  };
+}
+
 // 辅助函数：判断是否为多行内容
 const isMultiLine = (value: string) => value.includes('\n');
 
 export function Info() {
-  const { fileId } = useParams<{ fileId: string }>();
+  const { repoId, fileId } = useParams<{ repoId: string, fileId: string }>();
   const [sections, setSections] = useState<InfoSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,13 +48,22 @@ export function Info() {
       }
 
       try {
-        const response = await request(`/process/${fileId}/process`, {
-          method: 'POST',
-        });
+        const response = await request(`/files/json_res/${fileId}`, {
+          method: 'GET',
+        }) as InfoData;
 
         // 假设后端返回的数据结构与我们需要的格式相同
         // 如果不同，需要在这里进行数据转换
-        setSections(response.data);
+        const data = Object.entries(response.content).map(([key, value]) => ({
+          title: key,
+          items: value.map((item: InfoItem) => ({
+            key: item.key,
+            value: item.value
+          }))
+        }));
+        console.log(data);
+        
+        setSections(data);
         setLoading(false);
       } catch (err) {
         setError("获取数据失败");

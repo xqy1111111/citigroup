@@ -17,7 +17,6 @@ function App() {
             <Route path="/chat" element={<Chat />} />
             <Route path="/repo/:repoId" element={<General />} />
             <Route path="/repo/:repoId/:fileId" element={<Info />} />
-            <Route path="/info/:fileId" element={<Info />} />
           </Routes>
         </div>
       </Router>
