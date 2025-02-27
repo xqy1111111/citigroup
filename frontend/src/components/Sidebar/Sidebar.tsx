@@ -22,7 +22,11 @@ export function Sidebar() {
         {currentRepo.files.length > 0 ? (
           <div className="file-list">
             {currentRepo.files.map(file => (
-              <div key={file.file_id} className="sidebar-repo-item">
+              <div 
+                key={file.file_id} 
+                className="sidebar-repo-item" 
+                onClick={() => navigate(`/info/${file.file_id}`)}
+              >
                 {file.filename}
               </div>
             ))}
