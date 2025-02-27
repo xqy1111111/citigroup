@@ -7,12 +7,12 @@ import json
 
 def translate(value):
     switch={
-       "本次交易": "current transaction",
-       "相关交易": "related transactions",
-       "操作信息": "operation information",
-       "初始账户": "initial account",
-       "目标账户": "target account",
-       "欺诈检测": "fraud detection"
+       "本次交易": "current_transaction",
+       "相关交易": "related_transactions",
+       "操作信息": "operation_information",
+       "初始账户": "initial_account",
+       "目标账户": "target_account",
+       "欺诈检测": "fraud_detection"
     }
     return switch.get(value, value)
 
