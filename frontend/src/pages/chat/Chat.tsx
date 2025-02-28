@@ -1,6 +1,6 @@
 import "../reset.css";
 import "./Chat.css";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MenuBar } from "../../components/MenuBar/MenuBar";
 import { NavigationBar } from "../../components/NavigationBar/NavigationBar";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
@@ -23,7 +23,8 @@ function Chat() {
     const [inputValue, setInputValue] = useState<string>("");
     const [isTyping, setIsTyping] = useState<boolean>(false);
     const chatHistoryRef = React.useRef<HTMLDivElement | null>(null);
-
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     useEffect(() => {
         if (chatHistoryRef.current) {
             chatHistoryRef.current.scrollTop = chatHistoryRef.current.scrollHeight;
@@ -49,23 +50,35 @@ function Chat() {
     }, []);
 
     const quickInputs: QuickInput[] = [
-        { id: 1, text: "你好，请问..." },
-        { id: 2, text: "能帮我解释一下..." },
+        { id: 1, text: "你能帮我在识别金融欺诈方面做些什么吗？" },
+        { id: 2, text: "能帮分析一下这个文件显示内容的欺诈概率吗." },
         { id: 3, text: "如何实现..." },
         { id: 4, text: "有什么建议..." },
-        { id: 5, text: "有什么建议..." },
-        { id: 6, text: "有什么建议..." },
     ];
 
     const handleQuickInput = (text: string): void => {
         setInputValue(text);
     };
 
+
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+        }
+    };
+
+    const handleRemoveFile = () => {
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
     const handleSendMessage = async (): Promise<void> => {
         if (!inputValue.trim()) return;
-
         const userMessage: ChatMessage = {
-            content: inputValue,
+            content: selectedFile ? inputValue + " [附件: " + selectedFile?.name + "]" : inputValue,
             type: "user",
         };
 
@@ -74,11 +87,26 @@ function Chat() {
         setIsTyping(true);
 
         try {
-            const response = await getChat(user.id, currentRepo.id, inputValue);
+            let response;
+            if (selectedFile) {
+                response = await getChatWithFile(user.id, currentRepo.id, inputValue + " [附件: " + selectedFile?.name + "]", selectedFile);
+                setSelectedFile(null); // 清除已选择的文件
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = ''; // 清除文件输入框
+                }
+            } else {
+                response = await getChat(user.id, currentRepo.id, inputValue);
+            }
+            
             setMessages((prev) => [...prev.slice(0, prev.length-1)]);
             typeWriterEffect(response.text);
         } catch (error) {
             console.error("发送消息失败:", error);
+            setMessages((prev) => [...prev.slice(0, prev.length-1), {
+                content: "消息发送失败，请重试",
+                type: "assistant"
+            }]);
+            setIsTyping(false);
         }
     };
 
@@ -101,7 +129,7 @@ function Chat() {
                 clearInterval(interval);
                 setIsTyping(false);
             }
-        }, 33); //33MS刷新一个字符
+        }, 10); //10MS刷新一个字符
     };
 
     const handleKeyPress = (
@@ -113,7 +141,7 @@ function Chat() {
         }
     };
 
-    return (
+ return (
         <div className="Container">
             <MenuBar />
             <div className="main-content">
@@ -151,13 +179,47 @@ function Chat() {
                             ))}
                         </div>
                         <div className="Chat-Input">
-                            <textarea
-                                value={inputValue}
-                                onChange={(e) => setInputValue(e.target.value)}
-                                onKeyPress={handleKeyPress}
-                                placeholder="输入消息，按Enter发送..."
-                            />
-                            <button onClick={handleSendMessage} className="send-button" disabled={isTyping}>
+                            <div className="input-container">
+                                <textarea
+                                    value={inputValue}
+                                    onChange={(e) => setInputValue(e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                    placeholder="输入消息，按Enter发送..."
+                                    disabled={isTyping}
+                                />
+                                <div className="file-upload-container">
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileSelect}
+                                        style={{ display: 'none' }}
+                                        disabled={isTyping}
+                                    />
+                                    <button 
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="file-button"
+                                        disabled={isTyping}
+                                    >
+                                     <img src="/public/upload.svg" alt="上传文件" className="upload-icon" />
+                                     {!selectedFile && (
+                                        <div className="selected-file-prompt">
+                                            [至多可选1个文件] 请选择文件 (支持PDF,DOCX,XLSX,TXT,JPG等)
+                                        </div>
+                                     )}
+                                    </button>
+                                    {selectedFile && (
+                                        <div className="selected-file">
+                                            <span>{selectedFile.name}</span>
+                                            <button onClick={handleRemoveFile}>×</button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <button 
+                                onClick={handleSendMessage} 
+                                className="send-button" 
+                                disabled={isTyping}
+                            >
                                 发送
                             </button>
                         </div>

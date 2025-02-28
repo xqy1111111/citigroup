@@ -25,9 +25,11 @@ export function NavigationBar() {
         <button className="nav-button" onClick={handleHomeClick}>
           <img src="/user.svg" alt="File" className="nav-icon" />
         </button>
-        <button className="nav-button" onClick={handleChatClick}>
+        {currentRepo.id && (
+        <button className="nav-button" onClick={handleChatClick} >
           <img src="/robot.svg" alt="Chat" className="nav-icon" />
-        </button>
+          </button>
+        )}
       </div>
     </div>
   );
