@@ -5,7 +5,8 @@
   color: #ffffff;
 }
 
-.current-repo,
+.current-repo-files,
+.current-repo-result,
 .history-repo {
   margin-bottom: 20px;
 }

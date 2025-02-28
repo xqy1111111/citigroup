@@ -4,7 +4,7 @@ import { MenuBar } from "../../components/MenuBar/MenuBar";
 import { NavigationBar } from "../../components/NavigationBar/NavigationBar";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { useUser } from "../../utils/UserContext";
-import { getUser, userData, downloadFile } from "../../api/user";
+import { getUser, userData, downloadFile, uploadFile, getRepo, processFile } from "../../api/user";
 import "./General.css";
 
 export function General() {
@@ -26,6 +26,36 @@ export function General() {
       })
       .catch((error) => {
         console.error("下载文件时出错:", error);
+      });
+  }, []);
+
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    console.log(file);
+    if (file) {
+      uploadFile(repoId!, file, true)
+        .then((response) => {
+          console.log("文件上传成功:", response);
+          getRepo(repoId!).then((response) => {
+            setCurrentRepo(response);
+          });
+        })
+        .catch((error) => {
+          console.error("上传文件时出错:", error);
+        });
+    }
+  }, []);
+
+  const handleProcessFile = useCallback((fileId: string) => {
+    processFile(repoId!, fileId)
+      .then((response) => {
+        console.log("文件处理成功:", response);
+        getRepo(repoId!).then((response) => {
+          setCurrentRepo(response);
+        });
+      })
+      .catch((error) => {
+        console.error("处理文件时出错:", error);
       });
   }, []);
 
@@ -75,7 +105,16 @@ export function General() {
           <div className="data-container">
             <div className="data-card">
               <div className="data-header">
-                <h3>文件列表</h3>
+                <h3 style={{ flex: 1 }}>文件列表</h3>
+                <input 
+                  type="file" 
+                  onChange={handleFileUpload} 
+                  style={{ display: 'none' }} 
+                  id="file-upload" 
+                />
+                <label htmlFor="file-upload" className="upload-button">
+                  上传文件
+                </label>
               </div>
               <div className="data-content">
                 <table>
@@ -85,6 +124,7 @@ export function General() {
                       <th>大小</th>
                       <th>上传时间</th>
                       <th>状态</th>
+                      <th>操作</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -97,6 +137,14 @@ export function General() {
                           <div className="status-badge processing">
                             {(parseFloat(file.status) * 100).toFixed(1)}%
                           </div>
+                        </td>
+                        <td>
+                          <button 
+                            onClick={() => handleProcessFile(file.file_id)}
+                            className="process-button"
+                          >
+                            处理
+                          </button>
                         </td>
                       </tr>
                     ))}

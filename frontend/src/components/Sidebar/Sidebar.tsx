@@ -17,8 +17,8 @@ export function Sidebar() {
 
   return (
     <div className="sidebar">
-      <div className="current-repo">
-        <h3>当前仓库: {currentRepo.id ? currentRepo.name : "无"}</h3>
+      <div className="current-repo-files">
+        <h3>原文件: {currentRepo.id ? currentRepo.name : "无"}</h3>
         {currentRepo.files.length > 0 ? (
           <div className="file-list">
             {currentRepo.files.map(file => (
@@ -27,6 +27,21 @@ export function Sidebar() {
                 className="sidebar-repo-item" 
                 onClick={() => navigate(`/repo/${currentRepo.id}/${file.file_id}`)}
               >
+                {file.filename}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="no-files">该仓库没有文件</div>
+        )}
+      </div>
+
+      <div className="current-repo-result">
+        <h3>处理后文件</h3>
+        {currentRepo.results.length > 0 ? (
+          <div className="file-list">
+            {currentRepo.results.map(file => (
+              <div key={file.file_id} className="sidebar-repo-item">
                 {file.filename}
               </div>
             ))}

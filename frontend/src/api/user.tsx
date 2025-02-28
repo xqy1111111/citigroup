@@ -109,6 +109,7 @@ export async function updateRepoDesc(repoId: string, data: { new_name: string; n
 
 // file的api
 export async function uploadFile(repoId: string, file: File, source: boolean = false): Promise<file> {
+  console.log(file);
   const formData = new FormData();
   formData.append('cur_file', file);
   const response = await request.post(`files/upload?repo_id=${repoId}&source=${source}`, formData) as file;
@@ -158,3 +159,8 @@ export async function getChatWithFile(userID: string, repoId: string, fileId: st
   const response = await request.post(`/chat/file?repo_id=${repoId}&file_id=${fileId}`) as chat;
   return response;
 }
+
+export async function processFile(repoId: string, fileId: string): Promise<void> {
+  await request.post(`/process/${fileId}/process?repo_id=${repoId}`);
+}
+
