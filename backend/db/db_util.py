@@ -289,7 +289,7 @@ def get_file_metadata_by_id(repo_id: str, file_id: str, source=True):
         "filename": file_data["filename"],
         "size": file_data["size"],
         "upload_date": file_data["uploaded_at"],
-        "status": file_data.get("status", "unknown")
+        "status": str(file_data.get("status", "unknown"))
     }
 
 
