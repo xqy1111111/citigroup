@@ -1,0 +1,46 @@
+.navigation-bar {
+  width: 50px;
+  background-color: #333333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 10px;
+}
+
+.nav-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2px 2px;
+  width: 100%;
+}
+
+.nav-button {
+  width: 100%;
+  height: 50px;
+  border: none;
+  background: transparent;
+  color: #858585;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.nav-button:hover {
+  color: #ffffff;
+  background-color: #404040;
+}
+
+.nav-button.active {
+  color: #ffffff;
+  border-left: 2px solid #007acc;
+  background-color: #404040;
+}

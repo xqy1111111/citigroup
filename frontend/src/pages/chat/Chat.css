@@ -1,0 +1,350 @@
+.Container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.Chat {
+  display: flex;
+  flex-grow: 8;
+  flex-direction: column;
+  height: 100%;
+  background-color: rgb(30, 30, 30);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.Chat-History {
+  height: calc(100vh - 18em);
+  min-height: 300px;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f5f5f5;
+  background-color: rgb(30, 30, 30);
+}
+
+.Chat-History::-webkit-scrollbar {
+  width: 8px;
+}
+
+.Chat-History::-webkit-scrollbar-track {
+  background: rgb(30, 30, 30);
+}
+
+.Chat-History::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+  border: 2px solid rgb(30, 30, 30);
+}
+
+.Chat-History::-webkit-scrollbar-thumb:hover {
+  background-color: #666;
+}
+
+.message {
+  max-width: 70%;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.message-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.user-message {
+  align-self: flex-end;
+  background-color: #007bff;
+  color: white;
+  flex-direction: row-reverse;
+}
+
+.assistant-message {
+  align-self: flex-start;
+  background-color: rgb(45, 45, 45);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.message-content-wrapper {
+  flex: 1;
+}
+
+.message-content {
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.message-timestamp {
+  font-size: 0.8em;
+  opacity: 0.7;
+  text-align: right;
+}
+
+.Chat-Input {
+  display: flex;
+  gap: 10px;
+  padding: 20px;
+  background-color: rgb(30, 30, 30);
+  border-top: 1px solid rgb(30, 30, 30);
+}
+
+.Chat-Input textarea {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid rgb(30, 30, 30);
+  border-radius: 8px;
+  resize: none;
+  height: 60px;
+  font-size: 14px;
+}
+
+.Chat-Input textarea:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.send-button {
+  padding: 0 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.send-button:hover {
+  background-color: #0056b3;
+}
+
+.send-button:active {
+  background-color: #004085;
+}
+
+.Quick-Inputs {
+  display: flex;
+  gap: 10px;
+  padding: 10px 20px;
+  background-color: rgb(30, 30, 30);
+  border-top: 1px solid rgb(30, 30, 30);
+  border-bottom: 1px solid rgb(30, 30, 30);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.quick-input-item {
+  padding: 8px 16px;
+  background-color: rgb(45, 45, 45);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  color: white;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.quick-input-item:hover {
+  background-color: rgb(50, 50, 50);
+  transform: translateY(-1px);
+}
+
+.quick-input-item:active {
+  background-color: #ced4da;
+  transform: translateY(0);
+}
+
+/* 修改滚动条样式 */
+.Quick-Inputs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.Quick-Inputs::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+.Quick-Inputs::-webkit-scrollbar-thumb {
+  background-color: #dee2e6;
+  border-radius: 2px;
+}
+
+.Quick-Inputs::-webkit-scrollbar-thumb:hover {
+  background-color: #ced4da;
+}
+
+.input-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 8px;
+}
+
+.file-upload-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.file-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.file-button img {
+    width: 40px;
+    height: 40px;
+    background-color: white;
+    border-radius: 5px;
+}
+
+.selected-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.selected-file button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    font-size: 16px;
+    padding: 0 4px;
+}
+
+.selected-file button:hover {
+    color: #ff4d4f;
+}
+
+.selected-file-prompt {
+    margin-left: 10px;
+    color:white;
+    font-size: 16px;
+}
+
+/* Markdown 样式 */
+.message-content {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.message-content h1,
+.message-content h2,
+.message-content h3,
+.message-content h4,
+.message-content h5,
+.message-content h6 {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.message-content h1 { font-size: 2em; }
+.message-content h2 { font-size: 1.5em; }
+.message-content h3 { font-size: 1.17em; }
+.message-content h4 { font-size: 1em; }
+
+.message-content p {
+    margin-bottom: 8px;
+}
+
+.message-content ul,
+.message-content ol {
+    margin-bottom: 8px;
+    padding-left: 20px;
+}
+
+.message-content li {
+    margin-bottom: 4px;
+}
+
+.message-content .code-block {
+    display: block;
+    padding: 12px;
+    margin: 8px 0;
+    background-color: #1a1a1a;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.message-content .inline-code {
+    padding: 2px 4px;
+    background-color: #1a1a1a;
+    border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.message-content table {
+    border-collapse: collapse;
+    margin: 8px 0;
+    width: 100%;
+}
+
+.message-content th,
+.message-content td {
+    border: 1px solid #444;
+    padding: 8px;
+    text-align: left;
+}
+
+.message-content th {
+    background-color: #1a1a1a;
+}
+
+.message-content blockquote {
+    margin: 8px 0;
+    padding-left: 16px;
+    border-left: 4px solid #444;
+    color: #888;
+}
+
+.message-content a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.message-content a:hover {
+    text-decoration: underline;
+}
+
+.message-content hr {
+    margin: 16px 0;
+    border: none;
+    border-top: 1px solid #444;
+}
+
+.message-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 8px 0;
+    border-radius: 4px;
+}

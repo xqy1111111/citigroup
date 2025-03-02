@@ -2,6 +2,7 @@ from fastapi import APIRouter, File, UploadFile, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
 from typing import Optional
 from io import BytesIO
+import urllib.parse
 
 # 假设这些函数是从 db_util.py 中导入
 from db.db_util import (
@@ -82,17 +83,19 @@ async def download_file_api(file_id: str):
         raise HTTPException(status_code=404, detail="File not found")
 
     filename, file_content = file_data
-    # 使用 BytesIO 进行包装并返回流式响应
     file_like = BytesIO(file_content)
     file_like.seek(0)
 
-    # 以 StreamingResponse 形式返回
+    # 处理文件名，防止编码问题
+    encoded_filename = urllib.parse.quote(filename)  # 处理非 ASCII 文件名
+
     return StreamingResponse(
         file_like,
         media_type="application/octet-stream",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+        }
     )
-
 
 @router.put("/{file_id}", response_model=str)
 async def update_file_status_api(repo_id: str, 

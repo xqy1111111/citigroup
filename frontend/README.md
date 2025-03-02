@@ -1,8 +1,10 @@
-# React + Vite
+# Citi
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+For developers, please run `npm install` to check every package is installed.
 
-Currently, two official plugins are available:
+## Commands
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- `npm run dev` to quickly start a html session
+- `npm build` to build the project
+
+**This README is prone to change**
