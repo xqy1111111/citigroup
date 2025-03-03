@@ -16,7 +16,7 @@ import platform
 import glob
 from services.risk_prediction.prediction import predict_all
 
-from db.db_util import create_or_get_chat_history,update_chat_history
+from db.db_util import create_or_get_chat_history,update_chat_history,get_json_res,get_file_metadata_by_id
 from .repo import convert_objectid
 router = APIRouter()
 
@@ -214,18 +214,55 @@ async def chat_with_file(user_id: str, repo_id: str, message: str, file: UploadF
     update_chat_history(user_id, repo_id, store_message, response)
     return response
 
-# @router.get("/history/{user_id}", response_model=List[ChatHistory])
-# async def get_chat_history_list(user_id: str):
-#     """获取用户的聊天历史列表"""
-#     pass
 
-# @router.get("/history/{user_id}/{history_id}/messages", response_model=List[Message])
-# async def get_chat_messages(user_id: str, history_id: str):
-#     """获取特定聊天历史的消息列表"""
-#     pass
+@router.post("/{user_id}/{repo_id}/{file_id}", response_model=Message)
+async def chat_with_file_id(user_id: str, repo_id: str,file_id:str, message: str):
+      """
+    参数:
+        user_id (str): 用户的ID。
+        repo_id (str): 仓库的ID。
+        file_id (str): 文件ID，文件需要是处理过的，但传fileid是sourcefile的id。
+        message (str): 用户发送的消息。
 
-# @router.delete("/history/{user_id}/{history_id}")
-# async def delete_chat_history(user_id: str, history_id: str):
-#     """删除特定的聊天历史"""
-#     pass 
+    返回:
+        Message: 助手的响应消息。
+
+    """
+      
+
+
+      create_or_get_chat_history(user_id, repo_id)
+      json_res=get_json_res(file_id)
+      store_message = Message(sayer="user", text=message,timestamp=datetime.now())
+      if(json_res is None):
+          return None
+      system_prompt = """- Role: 金融风险评估专家和高级金融分析师
+- Background: 用户拥有一个本地小模型，能够根据金融文件信息计算出诈骗概率。用户希望借助大模型的深度分析能力，结合诈骗概率和金融文件内容，获取关于诈骗风险的详细理由和针对性建议。
+- Profile: 你是一位在金融风险评估领域经验丰富的专家，精通金融文件分析、风险识别和欺诈检测。你能够快速准确地解读金融文件的关键信息，并结合诈骗概率数据，提供全面且具有实际操作性的建议。
+- Skills: 你具备金融数据分析、风险评估、欺诈检测、法律合规以及沟通能力，能够将复杂的金融信息转化为易于理解的建议。
+- Goals: 
+  1. 接收金融文件内容和诈骗概率数据。
+  2. 分析金融文件的关键信息，结合诈骗概率数据，找出潜在的风险点。
+  3. 提供详细的风险理由和针对性的建议。
+- Constrains: 你的分析应基于金融文件内容和诈骗概率数据，确保建议的合理性和实用性，同时遵守金融行业的法律法规和职业道德。
+- OutputFormat: 输出应包括风险理由和建议，格式清晰，便于用户理解和操作。
+- Workflow:
+  1. 接收金融文件内容和诈骗概率数据。
+  2. 分析金融文件的关键信息，包括交易主体、资金流向、合同条款等。
+  3. 结合诈骗概率数据，评估风险点并提供详细理由。
+  4. 根据风险评估结果，提出针对性的建议。
+- Examples:
+  - 例子：
+    - 金融文件内容：一份涉及跨境投资的合同，涉及金额较大，交易主体为一家新兴科技公司。
+    - 诈骗概率：30%
+    - 风险理由：诈骗概率较高，合同中存在一些模糊条款，资金流向不明确，且交易主体的背景信息有限。
+    - 建议：建议进一步调查交易主体的背景，明确资金流向，细化合同条款，必要时咨询法律专家。
+------------------------------------------------------------------------
+下面是用户要求：
+    """ 
+      message=system_prompt+message+ "\n文件内容如下： "+str(json_res["content"])+ "\n用户上传的文件诈骗概率为： "+(str)(get_file_metadata_by_id(repo_id,file_id,True)["status"])
+      response_text = await ai_service.chat(message)
+      response=Message(sayer="assistant", text=response_text,timestamp=datetime.now())
+      update_chat_history(user_id, repo_id, store_message, response)
+      return response
 
