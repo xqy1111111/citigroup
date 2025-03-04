@@ -189,6 +189,12 @@ def add_collaborator(repo_id, collaborator_id):
         {"_id": ObjectId(repo_id)},
         {"$addToSet": {"collaborators": ObjectId(collaborator_id)}}
     )
+
+    # 添加协作仓库
+    db.users.update_one(
+        {"_id": ObjectId(collaborator_id)},
+        {"$addToSet": {"collaborations": ObjectId(repo_id)}}
+    )
     return "success"  # 成功添加协作者
 
 # =============================== 文件相关操作 ===============================
