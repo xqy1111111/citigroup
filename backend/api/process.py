@@ -1,144 +1,110 @@
 import random
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
-from typing import List
-
-from matplotlib.pylab import rand
-from services.risk_prediction.prediction import predict_all
-from models.chat import ChatHistory, Message
-
-
-from services.ai_service import AIService
-from services.DataStructuring.DataStructuring import main_process
-from db.db_util import create_or_update_json_res
-from db.db_util import update_file_status,upload_res_file
-from services import target_to_json
+import asyncio
 import shutil
 import os
-import platform
 import glob
 import json
-from io import BytesIO
-
+from fastapi import APIRouter, HTTPException
+from services.risk_prediction.prediction import predict_all
+from services.DataStructuring.DataStructuring import main_process
+from services import target_to_json
+from db.db_util import create_or_update_json_res, update_file_status, upload_res_file
 from ._file import download_file
+import aiofiles  # 异步文件操作
+
 router = APIRouter()
 
-
 @router.post("/{file_id}/process")
-async def process_file_to_json(file_id: str,repo_id: str):
+async def process_file_to_json(file_id: str, repo_id: str):
     """
-    处理文件并返回JSON数据和风险预测结果。
+    处理文件并返回 JSON 数据和风险预测结果。
     
     参数:
-        file_id (str): 要处理的文件ID。
-        repo_id (str): 存储文件的存储库ID。
-    
+        file_id (str): 需要处理的文件 ID。
+        repo_id (str): 存储文件的存储库 ID。
+
     返回:
-        dict: 包含JSON内容和预测概率的字典。
+        dict: 立即返回消息，文件将在后台异步处理。
     """
-    file_data = download_file(file_id)
+    file_data = await asyncio.to_thread(download_file, file_id)
     if not file_data:
         raise HTTPException(status_code=404, detail="File not found")
 
+    # 立即更新状态，并返回
+    await asyncio.to_thread(update_file_status, repo_id, file_id, "processing", True)
+    
+    # 启动异步任务
+    asyncio.create_task(background_processing(file_id, repo_id, file_data))
+
+    return {"message": "File processing started", "file_id": file_id, "repo_id": repo_id}
+
+
+async def background_processing(file_id: str, repo_id: str, file_data):
+    """异步处理文件"""
     filename, file_content = file_data
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
-
-   
-    
-    current_file_path = os.path.abspath(__file__)
-    # 获得当前文件的父目录
-    parent_dir = os.path.dirname(current_file_path)
-    parent_dir = os.path.dirname(parent_dir)
+    # 目录设置
     upload_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "SourceData")
-    excel_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "TargetData")
-    json_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "JsonData")
-
-    # 如果文件夹不存在就新建文件夹
-    if not os.path.exists(upload_folder):
-        os.makedirs(upload_folder)
-    if not os.path.exists(json_folder):
-        os.makedirs(json_folder)
-    print("\n\n\n")
-    print(upload_folder)
-    print("\n\n\n")
-    '''
-        # 获得当前文件路径
-        current_file_path = os.path.abspath(__file__)
-        # 获得当前文件的父目录
-        parent_dir = os.path.dirname(current_file_path)
-        parent_dir = os.path.dirname(parent_dir)
-        upload_folder = os.path.join("..", parent_dir, "services", "DataStructuring", "DataStructuring", "SourceData")
-        json_folder = os.path.join("..", parent_dir, "services", "DataStructuring", "DataStructuring", "JsonData")
-    '''
-    file_path = os.path.join(upload_folder, filename)
-    # print("\n***file_path: ", file_path)
-    
-    # 删除file_path 下的所有文件
-    if os.path.exists(upload_folder):
-        for file_name_ in os.listdir(upload_folder):
-            os.remove(os.path.join(upload_folder, file_name_))
-
-    with open(file_path, "wb") as buffer:
-        buffer.write(file_content)
-    
-    # 这里需要添加文件处理逻辑
-    main_process.main_process()
-
- 
-    predict_folder = os.path.join(parent_dir, "services", "risk_prediction", "SourceData")
     target_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "TargetData")
-    if not os.path.exists(predict_folder):
-        os.makedirs(predict_folder)
+    json_folder = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring", "JsonData")
+    predict_folder = os.path.join(parent_dir, "services", "risk_prediction", "SourceData")
 
-    
+    # 确保文件夹存在
+    for folder in [upload_folder, target_folder, json_folder, predict_folder]:
+        os.makedirs(folder, exist_ok=True)
 
-    if os.path.exists(predict_folder):
-        for _file_name in os.listdir(predict_folder):
-            os.remove(os.path.join(predict_folder, _file_name))
-    
-    for _file_name in os.listdir(target_folder):
-        shutil.copy(os.path.join(target_folder, _file_name), os.path.join(predict_folder, _file_name))
-    predict_probability = random.uniform(0.3, 0.5)  # 生成一个随机的诈骗概率
-    predict_results = predict_all()
-    if not predict_results[os.listdir(predict_folder)[0]]:
-        predict_results[os.listdir(predict_folder)[0]] = predict_probability # 生成一个随机的诈骗概率
+    # 清空 upload_folder
+    for file in os.listdir(upload_folder):
+        os.remove(os.path.join(upload_folder, file))
 
+    file_path = os.path.join(upload_folder, filename)
 
+    # 异步写入文件
+    async with aiofiles.open(file_path, "wb") as buffer:
+        await buffer.write(file_content)
 
+    # 运行数据处理（在独立线程执行）
+    await asyncio.to_thread(main_process.main_process)
 
-    print("\n\n\n")
-    print("predict_results:                      """"""""]]]]]", predict_results)
-    print("\n\n\n")
-    # 清空json文件夹
-    if os.path.exists(json_folder):
-        for file_name in os.listdir(json_folder):
-            os.remove(os.path.join(json_folder, file_name))
-    target_to_json.process_target_to_json()
-    
-   
-    # 获取json_folder文件夹里所有文件的内容
+    # 清理并准备预测
+    for file in os.listdir(predict_folder):
+        os.remove(os.path.join(predict_folder, file))
+
+    for _file in os.listdir(target_folder):
+        shutil.copy(os.path.join(target_folder, _file), os.path.join(predict_folder, _file))
+
+    # 预测诈骗概率
+    predict_probability = random.uniform(0.3, 0.5)
+    predict_results = await asyncio.to_thread(predict_all)
+    if not predict_results.get(os.listdir(predict_folder)[0], None):
+        predict_results[os.listdir(predict_folder)[0]] = predict_probability
+
+    # 清空 json_folder
+    for file in os.listdir(json_folder):
+        os.remove(os.path.join(json_folder, file))
+
+    # 运行 JSON 处理
+    await asyncio.to_thread(target_to_json.process_target_to_json)
+
+    # 读取 JSON 结果
     json_files = glob.glob(os.path.join(json_folder, "*.json"))
-
-    # 将json文件解析为json，并以json返回
     json_data = []
     for json_file in json_files:
-        with open(json_file, "r", encoding="utf-8") as f:
-            json_data.append(json.load(f))
-    
-    upload_excel_file_name=os.listdir(target_folder)[0]
-    
-    with open(os.path.join(target_folder,upload_excel_file_name), "rb") as f:
-        upload_res_file(repo_id,f,file_id,upload_excel_file_name,False)
+        async with aiofiles.open(json_file, "r", encoding="utf-8") as f:
+            json_content = await f.read()
+            json_data.append(json.loads(json_content))
 
-    create_or_update_json_res(file_id, json_data[0])
-    update_file_status(repo_id,file_id,(predict_probability),True)
+  
+ 
+    upload_excel_file_name = os.listdir(target_folder)[0]
+    upload_file_path = os.path.join(target_folder, upload_excel_file_name)
 
-    
-    return {"json_content":json_data[0],"predict_probability":predict_probability}
+    # 传递文件对象
+    with open(upload_file_path, "rb") as file_obj:
+        await asyncio.to_thread(upload_res_file, repo_id, file_obj, file_id, upload_excel_file_name, False)
 
-    # all_files_content = {}
-    # for json_file in json_files:
-    #     with open(json_file, "r", encoding="utf-8") as f:
-    #         file_content = f.read()
-    #         all_files_content[os.path.basename(json_file)] = file_content
-    
+    # 更新数据库状态
+    await asyncio.to_thread(create_or_update_json_res, file_id, json_data[0])
+    await asyncio.to_thread(update_file_status, repo_id, file_id, predict_probability, True)
+
