@@ -18,15 +18,15 @@ def translate(value):
 
 
 
-def process_target_to_json():
+def process_target_to_json(target_dir=None,json_dir=None):
     # 首先，获取本文件的路径
     current_path = os.path.abspath(__file__)
     print(f"本文件的路径是: {current_path}\n")
     # 然后相对于本文件的路径
     base_path = os.path.dirname(current_path)
    
-    target_path = os.path.join(base_path, "DataStructuring", "DataStructuring", "TargetData")
-    json_path = os.path.join(base_path, "DataStructuring", "DataStructuring", "JsonData")
+    target_path = target_dir if target_dir else  os.path.join(base_path, "DataStructuring", "DataStructuring", "TargetData")
+    json_path =json_dir if json_dir else os.path.join(base_path, "DataStructuring", "DataStructuring", "JsonData")
     print(f"目标文件夹的绝对路径是: {target_path}")
 
     # 然后，遍历target文件夹中的所有xlsx文件

@@ -9,7 +9,7 @@ train_columns = {}
 class AdaBoostPredicModel:
     def __init__(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        # print(current_dir)
+        # #print(current_dir)
         self.model = joblib.load(os.path.join(current_dir, 'adaboost_model.joblib'))
 
     def TrainandPred(self,X0):
@@ -22,7 +22,7 @@ class AdaBoostPredicModel:
         #     "probability of predict as 1": y_pred_proba.tolist(),
         # }
         result = y_pred_proba[0]
-        print("probability of predict as 1:", result)
+        #print("probability of predict as 1:", result)
         return result
 
 
@@ -79,26 +79,26 @@ def predict_once(file_path):
                     data.loc[0, 'type_PAYMENT'] = False
                     data.loc[0, 'type_TRANSFER'] = True
                 elif content == '无':
-                    print("error:交易数据不足")
+                    #print("error:交易数据不足")
                     return
                 else:
-                    print("error:交易类型错误")
+                    #print("error:交易类型错误")
                     return
             elif key == '交易金额':
                 if content == '无':
-                    print("error:交易数据不足")
+                    #print("error:交易数据不足")
                     return
                 else:
                     data.loc[0, 'amount'] = content
             elif key == '初始账户旧余额':
                 if content == '无':
-                    print("error:交易数据不足")
+                    #print("error:交易数据不足")
                     return
                 else:
                     data.loc[0, 'oldbalanceOrg'] = content
             elif key == '初始账户新余额':
                 if content == '无':
-                    print("error:交易数据不足")
+                    #print("error:交易数据不足")
                     return
                 else:
                     data.loc[0, 'newbalanceOrig'] = content
@@ -113,8 +113,13 @@ def predict_once(file_path):
 
 #示例操作调用函数
 
-def predict_all():
+def predict_all(source_dir=None):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    
     dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './SourceData')
+    dir_path = source_dir if source_dir else os.path.join(current_dir, "SourceData")
+    #
+    
     file_list = os.listdir(dir_path)
     results = {}
     for file in file_list:
@@ -124,4 +129,4 @@ def predict_all():
             results[file] = predict_once(file_path)
     return results
 
-# print(predict_all(dir_path))
+# #print(predict_all(dir_path))
