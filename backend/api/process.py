@@ -102,9 +102,9 @@ async def background_processing(file_id: str, repo_id: str, file_data):
 
     # 传递文件对象
     with open(upload_file_path, "rb") as file_obj:
-        await asyncio.to_thread(upload_res_file, repo_id, file_obj, file_id, upload_excel_file_name, False)
+        res_id= await asyncio.to_thread(upload_res_file, repo_id, file_obj, file_id, upload_excel_file_name, False)
 
     # 更新数据库状态
-    await asyncio.to_thread(create_or_update_json_res, file_id, json_data[0])
+    await asyncio.to_thread(create_or_update_json_res, res_id, json_data[0])
     await asyncio.to_thread(update_file_status, repo_id, file_id, predict_probability, True)
 

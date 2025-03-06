@@ -118,7 +118,7 @@ async def get_json_res_api(file_id: str):
     """
     获得文件解析的json结果
     如果没有产生结果则将status code设置为404
-    注意：这里传的是源文件的file_id，而不是生成结果的file_id，也不是json_res 的 _id
+    注意：这里传的是生成结果的file_id，也不是json_res 的 _id
     """
     json_res = get_json_res(file_id)
     if json_res == None:
