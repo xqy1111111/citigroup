@@ -24,7 +24,7 @@ def GeneralFile(filepath):
     file_object = client.files.create(file=Path(filepath), purpose="file-extract")
     # 文件内容抽取
     file_content = client.files.content(file_id=file_object.id).content.decode()
-    # print(file_content)
+    # #print(file_content)
     # 删除云端文件(由于累计最大限制100个文件，需要及时从云端删除相应的文件)
     delete_single_file(file_object)
     # 使用json.loads()函数将字符串解析为字典
@@ -51,14 +51,14 @@ def delete_uploaded_files():
     """删除已经上传的所有文件"""
     # 获取当前以已上传文件的数量
     files = client.files.list(purpose="file-extract")
-    # print(files)
+    # #print(files)
     # 遍历文件列表，删除每个文件
     for file in files.data:
         file_id = file.id
         try:
             # 删除文件
             client.files.delete(file_id=file_id)
-            print(f"Deleted file with ID: {file_id}")
+            #print(f"Deleted file with ID: {file_id}")
         except Exception as e:
             print(f"Failed to delete file with ID: {file_id}. Error: {e}")
 
@@ -69,7 +69,7 @@ def delete_single_file(file_object):
     try:
         # 删除文件
         client.files.delete(file_id=file_object.id)
-        print(f"Deleted file with ID: {file_id}")
+        #print(f"Deleted file with ID: {file_id}")
     except Exception as e:
         print(f"Failed to delete file with ID: {file_id}. Error: {e}")
     return

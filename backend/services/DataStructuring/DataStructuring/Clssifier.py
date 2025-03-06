@@ -14,18 +14,19 @@ def Classify(InputPath,OutputPath):
     path = Path(InputPath)
     for filepath in path.rglob('*'):  # 使用了Path.rglob()方法，它可以递归地查找给定模式（在这个例子中是所有文件'*'）的所有文件路径
         if not filepath.is_file():  # 如果某个路径对应的不是文件的话那就continue好了 检查每个路径是否是文件，并在找到文件时打印出文件路径。
-            print(f"路径{filepath}对应的不是文件")
+            #print(f"路径{filepath}对应的不是文件")
             continue
-        print(filepath)
+        #print(filepath)
         answer="非结构化数据"
         try:
             # 接下来就是对文件进行具体操作，例如打开文件、读取内容、格式转换等
             content = filepath.read_text(encoding='utf-8')
-            # print(f"文件: {filepath} 的内容:")
-            # print(content)
+            # #print(f"文件: {filepath} 的内容:")
+            # #print(content)
             # 调用zhipuai接口判断 StructureLevels
             answer = QuiryModel(content=content)
         except Exception as e:
+            
             print(f"读取文件 {filepath} 时出错: {e}")
         Classify_in_Dir(filepath,answer,SD,SSD,USD)
     return
@@ -54,7 +55,7 @@ def QuiryModel(content):
         ],
     )
     answer = response.choices[0].message.content
-    print(answer)
+    #print(answer)
     if answer not in StructureLevels:
         answer = "非结构化数据"
     return answer

@@ -64,18 +64,18 @@ def google_speech_from_wav(wav_file):
     with sr.AudioFile(wav_file) as source:
         # 记录音频数据
         audio_data = recognizer.record(source)
-    print("读取WAV文件结束")
+    #print("读取WAV文件结束")
     # 调用  的语音识别 API 进行识别
     try:
         # text = recognizer.recognize_google(audio_data, language='zh-CN')
         text = recognizer.recognize_google(audio_data, language='zh-CN')
-        print("调用Google的语音识别API结束")
+        #print("调用Google的语音识别API结束")
         return text
     except sr.UnknownValueError:
-        print("未能理解音频")
+        #print("未能理解音频")
         return "未能理解音频"
     except sr.RequestError as e:
-        print("请求错误")
+        #print("请求错误")
         return f"请求错误：{e}"
 
 
@@ -83,6 +83,6 @@ def google_speech_from_wav(wav_file):
 # if __name__=="__main__":
 #     path=f"SourceData/模拟数据（改）/语音记录.m4a"
 #     content=AudioFile(path,"m4a")
-#     print(content)
+#     #print(content)
 
 

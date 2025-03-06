@@ -19,18 +19,18 @@ def FileTypeRecognize(filepath):
     """
     type = filetype.guess(filepath)
     if type is None:
-        print('无法识别文件类型...')
+        #print('无法识别文件类型...')
         return None  #如果没有办法识别的话那就返回None  但是这个时候需要注意调用它就得手动judge一下
-    print(f'{filepath}路径对应的文件是个{type.extension}文件，MIME类型是{type.mime}')
+    #print(f'{filepath}路径对应的文件是个{type.extension}文件，MIME类型是{type.mime}')
     return type.extension
 
 def CheckDirExist(DirPath):
     """这个函数是用来检查是否存在对应的文件夹路径"""
     if not os.path.exists(DirPath):
-        print(f"路径不存在: {DirPath}")
+        #print(f"路径不存在: {DirPath}")
         return None
     if not os.path.isdir(DirPath):
-        print(f"给定的路径不是一个目录: {DirPath}")
+        #print(f"给定的路径不是一个目录: {DirPath}")
         return None
     return 1
 
@@ -50,7 +50,7 @@ def write_to_txt_os(filepath, content):
             os.makedirs(dir_path, exist_ok=True)  # 确保父目录存在
         with open(filepath, 'w', encoding='utf-8') as file:
             file.write(content)
-        print(f"文件 {filepath} 已成功创建并写入内容。")
+        #print(f"文件 {filepath} 已成功创建并写入内容。")
     except Exception as e:
         print(f"创建或写入文件时出错: {e}")
 
@@ -61,7 +61,7 @@ def create_file(filepath):
         # 以写入模式打开文件，如果文件不存在会创建文件
         with open(filepath, 'w', encoding='utf-8') as file:
             pass  # 这里不进行写入操作，仅创建文件
-        print(f"文件 {filepath} 已成功创建。")
+        #print(f"文件 {filepath} 已成功创建。")
     except Exception as e:
         print(f"创建文件时出错: {e}")
 
@@ -76,7 +76,7 @@ def Extract_Chinese(json_data):
     # 将匹配到的中文字符拼接成一个字符串
     chinese_text = ''.join(chinese_parts)
     # 打印结果
-    print(chinese_text)
+    #print(chinese_text)
     return chinese_text
 
 
@@ -102,7 +102,7 @@ def Clear_Dir(DirList):
             shutil.rmtree(Dir)
             # 重新创建文件夹
             os.makedirs(Dir)
-            print(f"Folder '{Dir}' has been cleared and recreated.")
+            #print(f"Folder '{Dir}' has been cleared and recreated.")
         except Exception as e:
             print(f"Failed to clear folder '{Dir}'. Reason: {e}")
 
@@ -126,7 +126,7 @@ def set_proxy_env(config):
         proxy_url = f'http://127.0.0.1:{proxy_port}'
         os.environ['http_proxy'] = proxy_url
         os.environ['https_proxy'] = proxy_url
-        print(f"Proxy set to: {proxy_url}")
+        #print(f"Proxy set to: {proxy_url}")
     else:
         print("Proxy configuration not found.")
 
@@ -137,7 +137,7 @@ def restore_default_proxy():
         del os.environ['http_proxy']
     if 'https_proxy' in os.environ:
         del os.environ['https_proxy']
-    print("Proxy settings restored to default.")
+    #print("Proxy settings restored to default.")
 
 
 
@@ -158,7 +158,7 @@ def Create_Dirs(Dirs):
     for Dir in Dirs:
         NewPath=Path(Dir)
         NewPath.mkdir(parents=True, exist_ok=True)
-        print(f"Folder '{NewPath}' has been created.")
+        #print(f"Folder '{NewPath}' has been created.")
     return
 
 
@@ -167,7 +167,7 @@ def copy_file(source_file, destination_folder):
     try:
         # 执行文件复制操作
         shutil.copy2(source_file, destination_folder)
-        print(f"文件 {source_file} 已成功复制到 {destination_folder}。")
+        #print(f"文件 {source_file} 已成功复制到 {destination_folder}。")
     except FileNotFoundError:
         print(f"源文件 {source_file} 未找到。")
     except PermissionError:

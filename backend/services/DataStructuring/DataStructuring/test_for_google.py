@@ -26,18 +26,18 @@ def recognize_speech_from_wav(wav_file):
     with sr.AudioFile(wav_file) as source:
         # 记录音频数据
         audio_data = recognizer.record(source)
-    print("读取WAV文件结束")
+    #print("读取WAV文件结束")
     # 调用 google 的语音识别 API 进行识别
     try:
         # text = recognizer.recognize_google(audio_data, language='zh-CN')
         text = recognizer.recognize_google(audio_data, language='zh-CN')
-        print("调用Google的语音识别API结束")
+        #print("调用Google的语音识别API结束")
         return text
     except sr.UnknownValueError:
-        print("未能理解音频")
+        #print("未能理解音频")
         return "未能理解音频"
     except sr.RequestError as e:
-        print("请求错误")
+        #print("请求错误")
         return f"请求错误：{e}"
 
 
@@ -46,11 +46,11 @@ if __name__=="__main__":
     original_socket = socket.socket
     # proxy_path="VPN_proxy.yaml"
     # proxy_config=read_proxy_config(proxy_path)
-    # # print(proxy_config)
+    # # #print(proxy_config)
     # set_proxy_env(proxy_config)
     path=f"SourceData/语音.mp3"
     content=AudioFile(path,"mp3")
-    print(content)
+    #print(content)
     # restore_default_proxy()
     restore_default_network(original_socket)
 

@@ -31,25 +31,25 @@ def txt_to_excel(folder_path,output_path):
                     try:
                         with open(file_path, 'r', encoding='utf-8') as f:
                             content = f.read()
-                            # print(content)
-                            print('处理',file)
-                            print('----------------------------------------------')
+                            # #print(content)
+                            #print('处理',file)
+                            #print('----------------------------------------------')
                             # 获取表头出版汇总 的 绝对路径
                             current_dir = os.path.dirname(os.path.abspath(__file__))
                             target_file=os.path.join(current_dir,'./表头初版汇总.xlsx')
                             target=pd.read_excel(target_file)
-                            print(target)
+                            #print(target)
                             for context in all:
-                                print('处理',context,'指标')
-                                print('----------------------------------------------')
+                                #print('处理',context,'指标')
+                                #print('----------------------------------------------')
                                 prompt=get_prompt(context)
                                 response=''
                                 try:
                                     response = get_ollama_response(prompt+content)
                                     ###
-                                    #  print("\n\n\ncontent is :"+content)
+                                    #  #print("\n\n\ncontent is :"+content)
                                     ### 
-                                    print('response',response)
+                                    #print('response',response)
                                     if(context=='交易类型'):
                                         if 'A' in response or 'a' in response or '存款' in response:
                                             response = '存款'
@@ -135,26 +135,26 @@ def txt_to_excel(folder_path,output_path):
                                     #             response=results_pipe[0]
                                     #         else:
                                     #             response='无'
-                                    print('response',response)
+                                    #print('response',response)
                                 except:
                                     response='无'
-                                    print('获取信息失败')
+                                    #print('获取信息失败')
                                 condition=target['表头中具体条目']==context
                                 target.loc[condition,'内容']=response
-                                print('----------------------------------------------')
-                            #     print("成功填写")
+                                #print('----------------------------------------------')
+                            #     #print("成功填写")
                             # response=get_ollama_response(f"请基于{content}回答以下列表中每一项的信息{all}")
-                            # print(response)
+                            # #print(response)
 
                             target_file=output_path+'\\'+file[:-3]+'xlsx'
-                            print("----------------------------------------------\n")
-                            print(f"\n*** for debug: target_file: {target_file}")
+                            #print("----------------------------------------------\n")
+                            #print(f"\n*** for debug: target_file: {target_file}")
                             target.to_excel(target_file,index=False)
-                            print("----------------------------------------------\n")
+                            #print("----------------------------------------------\n")
                             txt_contents.append(content)
                     except Exception as e:
                         print(f"读取文件 {file_path} 时出错: {e}")
-        print(txt_contents)                
+        #print(txt_contents)                
         return txt_contents
 
     def get_ollama_response(prompt):
@@ -176,8 +176,8 @@ def txt_to_excel(folder_path,output_path):
             result = response.json()
             return result.get("response", "")
         except requests.RequestException as e:
-            print(f"请求 Ollama API 时出错: {e}")
+            #print(f"请求 Ollama API 时出错: {e}")
             return None
 
     txt_contents = read_txt_files(folder_path)
-    print("成功处理以下文件：",txt_contents)
+    #print("成功处理以下文件：",txt_contents)

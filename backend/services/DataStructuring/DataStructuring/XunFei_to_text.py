@@ -37,7 +37,7 @@ class RequestApi(object):
 
 
     def upload(self):
-        print("上传部分：")
+        ##print("上传部分：")
         upload_file_path = self.upload_file_path
         file_len = os.path.getsize(upload_file_path)
         file_name = os.path.basename(upload_file_path)
@@ -49,14 +49,14 @@ class RequestApi(object):
         param_dict["fileSize"] = file_len
         param_dict["fileName"] = file_name
         param_dict["duration"] = "200"
-        print("upload参数：", param_dict)
+        ##print("upload参数：", param_dict)
         data = open(upload_file_path, 'rb').read(file_len)
 
         response = requests.post(url =lfasr_host + api_upload+"?"+urllib.parse.urlencode(param_dict),
                                 headers = {"Content-type":"application/json"},data=data)
-        print("upload_url:",response.request.url)
+        ##print("upload_url:",response.request.url)
         result = json.loads(response.text)
-        print("upload resp:", result)
+        ##print("upload resp:", result)
         return result
 
 
@@ -69,23 +69,23 @@ class RequestApi(object):
         param_dict['ts'] = self.ts
         param_dict['orderId'] = orderId
         param_dict['resultType'] = "transfer,predict"
-        print("")
-        print("查询部分：")
-        print("get result参数：", param_dict)
+        ##print("")
+        ##print("查询部分：")
+        ##print("get result参数：", param_dict)
         status = 3
         # 建议使用回调的方式查询结果，查询接口有请求频率限制
         while status == 3:
             response = requests.post(url=lfasr_host + api_get_result + "?" + urllib.parse.urlencode(param_dict),
                                      headers={"Content-type": "application/json"})
-            # print("get_result_url:",response.request.url)
+            # ##print("get_result_url:",response.request.url)
             result = json.loads(response.text)
-            print(result)
+            ##print(result)
             status = result['content']['orderInfo']['status']
-            print("status=",status)
+            ##print("status=",status)
             if status == 4:
                 break
             time.sleep(5)
-        print("get_result resp:",result)
+        ##print("get_result resp:",result)
         return result
 
 
@@ -97,4 +97,4 @@ class RequestApi(object):
 #                      secret_key="5b7ce2f76552d228461e602728a2ffed",
 #                      upload_file_path=r"audio/lfasr_涉政.wav")
 #     result=api.get_result()
-#     print(result)
+#     ##print(result)
