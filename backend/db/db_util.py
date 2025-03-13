@@ -6,6 +6,7 @@ from gridfs import GridFS
 from datetime import datetime, UTC
 from db import db_config
 from models.chat import Message
+from core.security import get_password_hash, verify_password
 
 # 初始化MongoDB客户端
 client = MongoClient(db_config.DB_URL)
@@ -17,41 +18,108 @@ fs = GridFS(db)
 # 创建新用户
 def create_user(username, email, password, profile_picture=None):
     """
-    创建一个新的用户，
-    :param username 用户名
-    :param email 邮箱
-    :param password 明文密码
-    :param profile_picture 头像(可选)
-    :return: 返回用户的 mongodb _id
+    创建一个新的用户
+    
+    详细说明:
+    1. 此函数首先检查传入的密码是否已经经过哈希处理
+    2. 如果密码未哈希，则使用bcrypt算法进行哈希处理（更安全的方式）
+    3. 创建用户文档并保存到数据库
+    4. 返回新创建用户的ID
+    
+    :param username: 用户名
+    :param email: 邮箱地址
+    :param password: 可以是明文密码或已哈希的密码
+    :param profile_picture: 头像URL(可选)
+    :return: 返回用户的MongoDB _id (字符串格式)
     """
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    # 检查密码是否已经哈希处理
+    # bcrypt哈希的密码通常是60个字符长度且以$2开头
+    if len(password) == 60 and password.startswith('$2'):  # bcrypt哈希的特征
+        password_hash = password  # 如果已经是哈希值，直接使用
+    else:
+        # 如果是明文密码，使用bcrypt进行哈希处理
+        # bcrypt是一种设计用于密码哈希的现代算法，具有慢速计算特性，可抵抗暴力破解
+        password_hash = get_password_hash(password)
+    
+    # 创建用户文档，包含所有必要字段
     user = {
         "username": username,
         "email": email,
-        "password_hash": password_hash,
+        "password_hash": password_hash,  # 存储哈希后的密码，而非明文
         "profile_picture": profile_picture,
-        "repos": [],
-        "collaborations": []
+        "repos": [],  # 用户拥有的仓库列表，初始为空
+        "collaborations": []  # 用户参与协作的仓库列表，初始为空
     }
+    
+    # 将用户文档插入数据库
     result = db.users.insert_one(user)
+    # 返回新创建用户的ID（转换为字符串）
     return str(result.inserted_id)
+
+def get_user_by_username(username):
+    """
+    通过用户名查找用户
+    
+    详细说明:
+    1. 此函数在数据库中查找具有指定用户名的用户
+    2. 用于用户登录验证或检查用户名是否已被使用
+    
+    :param username: 要查找的用户名
+    :return: 找到的用户文档，未找到则返回None
+    """
+    # 在users集合中查找匹配用户名的文档
+    # find_one方法找到第一个匹配的文档或返回None
+    return db.users.find_one({"username": username})
+
+def get_user_by_email(email):
+    """
+    通过电子邮件地址查找用户
+    
+    详细说明:
+    1. 此函数在数据库中查找具有指定邮箱地址的用户
+    2. 用于用户登录验证或检查邮箱是否已被注册
+    
+    :param email: 要查找的电子邮件地址
+    :return: 找到的用户文档，未找到则返回None
+    """
+    # 在users集合中查找匹配邮箱的文档
+    return db.users.find_one({"email": email})
 
 def authenticate_user(username_or_email, password):
     """
     验证用户名或邮箱登录
-    :param username_or_email: 用户名 或 邮箱
+    
+    详细说明:
+    1. 此函数首先尝试使用提供的信息查找用户
+    2. 然后使用bcrypt验证提供的密码是否与存储的哈希密码匹配
+    3. 验证成功返回用户ID，失败返回None
+    
+    :param username_or_email: 用户名或邮箱地址
     :param password: 明文密码
-    :return: 成功返回用户的 _id，失败返回 None
+    :return: 验证成功返回用户ID(字符串)，失败返回None
     """
+    # 尝试查找匹配用户名或邮箱的用户
+    # $or操作符允许执行逻辑OR查询，匹配任一条件即可
     user = db.users.find_one({"$or": [{"username": username_or_email}, {"email": username_or_email}]})
 
     if user:
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
-        if password_hash == user["password_hash"]:
-            return str(user["_id"])  # 返回用户 ID（字符串格式）
+        # 使用bcrypt验证密码
+        # verify_password函数会将明文密码进行处理并与存储的哈希值比较
+        if verify_password(password, user["password_hash"]):
+            return str(user["_id"])  # 验证成功，返回用户ID
+    
+    # 未找到用户或密码不匹配，返回None
+    return None
 
 # 获取用户信息
 def get_user_by_id(user_id):
+    """
+    通过用户ID获取用户信息
+    
+    :param user_id: 用户的MongoDB _id
+    :return: 用户文档，未找到则返回None
+    """
+    # 将字符串ID转换为MongoDB的ObjectId类型
     return db.users.find_one({"_id": ObjectId(user_id)})
 
 # =============================== 仓库相关操作 ===============================
