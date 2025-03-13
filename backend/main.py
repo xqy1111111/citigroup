@@ -72,7 +72,7 @@ else:
 # 通过CORS，我们可以安全地放宽这一限制
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # 允许的前端域名列表，这里只允许本地开发服务器
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # 允许的前端域名列表，包括Vue的5173端口
     allow_credentials=True,  # 允许发送凭证（如cookies）
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # 允许的HTTP方法
     allow_headers=["Authorization", "Content-Type", "Accept"],  # 允许的HTTP请求头
