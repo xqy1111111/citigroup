@@ -1,6 +1,14 @@
 """
-认证路由模块
-处理用户注册、登录和令牌刷新等身份验证相关操作
+认证API路由模块
+
+此模块实现了用户身份验证系统的所有API端点，包括：
+1. 用户注册 - 创建新用户账户并返回JWT令牌
+2. 用户登录 - 验证凭据并签发访问令牌
+3. 令牌管理 - 处理JWT令牌的签发和验证
+4. 用户信息获取 - 通过token获取当前已认证用户的信息
+
+这些API组成了完整的身份验证系统，支持系统的用户注册、登录功能和安全访问控制。
+安全性设计基于JWT(JSON Web Token)，确保服务器无状态的同时提供可靠的身份验证。
 """
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -21,19 +29,22 @@ router = APIRouter()
 @router.post("/register", response_model=Token)
 async def register_user(user_data: UserRegister):
     """
-    用户注册
+    用户注册API
     
     详细说明:
+    此端点处理新用户注册流程，包括输入验证、用户创建和令牌签发。
+    一旦注册成功，用户将获得JWT访问令牌，可立即使用系统功能。
+    
+    实现流程:
     1. 验证两次输入的密码是否一致
     2. 检查用户名和邮箱是否已被使用（唯一性检查）
     3. 对密码进行安全哈希处理
     4. 创建新用户并生成访问令牌
     
-    流程:
-    - 接收用户提交的注册信息
-    - 进行各种验证（密码匹配、用户名和邮箱唯一性）
-    - 如果验证通过，创建用户并返回访问令牌
-    - 如果验证失败，返回相应的错误信息
+    安全特性:
+    - 密码在存储前使用bcrypt算法进行哈希处理
+    - 用户名和邮箱的唯一性验证防止重复注册
+    - 生成的JWT令牌有时效限制，增强安全性
     
     参数:
         user_data: 包含用户注册信息的模型(用户名、邮箱、密码等)
@@ -92,12 +103,16 @@ async def register_user(user_data: UserRegister):
 @router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     """
-    用户登录获取访问令牌
+    OAuth2标准登录API
     
     详细说明:
-    1. 此API端点处理标准OAuth2密码流程的登录请求
-    2. 验证用户提供的用户名和密码
-    3. 如果验证成功，生成并返回JWT访问令牌
+    此端点实现OAuth2密码授权流程，用于前端登录表单提交。
+    遵循OAuth2标准，通过form表单提交用户名和密码，返回JWT访问令牌。
+    
+    OAuth2流程:
+    1. 客户端提交用户名和密码
+    2. 服务器验证凭据并签发访问令牌
+    3. 客户端使用令牌访问受保护资源
     
     参数:
         form_data: OAuth2表单数据，自动由FastAPI提取，包含username和password字段
@@ -137,12 +152,16 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 @router.post("/login", response_model=Token)
 async def login(user_data: UserLogin):
     """
-    用户登录
+    自定义登录API
     
     详细说明:
-    1. 此API端点是自定义登录流程，接受用户名/邮箱和密码
-    2. 比OAuth2更灵活，支持用户名或邮箱登录
-    3. 验证成功后返回JWT访问令牌
+    此端点提供比标准OAuth2更灵活的登录方式，支持通过用户名或邮箱登录。
+    接收JSON格式的登录请求，适合现代前端应用使用。
+    
+    灵活性特点:
+    1. 支持用户名或邮箱登录（单个字段兼容两种方式）
+    2. 使用JSON请求体而非表单，更符合RESTful API设计
+    3. 更易于集成到各种前端框架
     
     参数:
         user_data: 包含登录信息的模型，有username_or_email和password字段
@@ -182,18 +201,27 @@ async def login(user_data: UserLogin):
 @router.get("/me", response_model=dict)
 async def read_users_me(current_user = Depends(get_current_user)):
     """
-    获取当前用户信息
+    获取当前用户信息API
     
     详细说明:
-    1. 此API端点用于获取当前已认证用户的信息
-    2. 使用JWT令牌进行认证，令牌通过请求头中的Authorization字段传递
-    3. 依赖项automatically从令牌中提取用户ID
+    此端点用于验证当前用户的认证状态并返回其信息。
+    它使用JWT令牌认证，从Authorization头中提取令牌并验证。
+    这是典型的受保护资源，用于测试认证系统是否正常工作。
+    
+    认证流程:
+    1. FastAPI从请求中提取授权头中的JWT令牌
+    2. get_current_user依赖项验证令牌的有效性
+    3. 从令牌中提取用户ID并返回
     
     参数:
         current_user: 当前用户ID，由get_current_user依赖项自动提取和验证
         
     返回:
-        dict: 包含用户信息的字典
+        dict: 包含用户信息的字典，当前实现简单返回用户ID
+        
+    安全性:
+    - 如果令牌无效或过期，get_current_user依赖项会抛出401异常
+    - 此端点仅对已认证用户可用
     """
     # 返回用户信息
     # 在完整实现中，应该从数据库获取用户详细信息后返回

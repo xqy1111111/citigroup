@@ -1,3 +1,15 @@
+"""
+FastAPI主应用程序入口
+
+这个文件是整个后端项目的入口点，它完成以下工作：
+1. 创建FastAPI应用实例
+2. 配置CORS(跨域资源共享)以允许前端访问
+3. 添加各种安全中间件
+4. 注册所有API路由
+5. 提供健康检查端点
+
+理解这个文件对于掌握整个项目结构至关重要
+"""
 from fastapi import FastAPI
 from api.user import router as user_router
 from api.repo import router as repo_router
@@ -9,11 +21,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.middleware import add_security_middlewares  # 导入安全中间件函数
 
 # 创建 FastAPI 实例
+# 这里定义了API的基本信息，如标题、描述和版本号，这些信息会显示在自动生成的API文档中
 app = FastAPI(
     title="My FastAPI Project",
     description="安全的后端API服务",
     version="1.0.0",
-    # 添加联系信息和许可证信息
+    # 添加联系信息和许可证信息，这些都会出现在API文档页面上
     contact={
         "name": "开发团队",
         "email": "dev@example.com",
@@ -24,37 +37,48 @@ app = FastAPI(
     },
 )
 
-# 配置CORS
-# 在生产环境中，应将origins替换为实际的前端域名
+# 配置CORS(跨域资源共享)中间件
+# CORS是一种安全机制，控制哪些外部网站可以访问你的API
+# 默认情况下，浏览器禁止网页向不同源的服务器发送请求，这就是"同源策略"
+# 通过CORS，我们可以安全地放宽这一限制
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # 将通配符替换为特定的前端域名
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # 明确列出允许的HTTP方法，而不是使用通配符
-    allow_headers=["Authorization", "Content-Type", "Accept"],  # 明确列出允许的HTTP请求头，而不是使用通配符
+    allow_origins=["http://localhost:3000"],  # 允许的前端域名列表，这里只允许本地开发服务器
+    allow_credentials=True,  # 允许发送凭证（如cookies）
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # 允许的HTTP方法
+    allow_headers=["Authorization", "Content-Type", "Accept"],  # 允许的HTTP请求头
 )
 
 # 添加安全中间件
+# 安全中间件可以帮助防止各种常见的Web攻击，如XSS、CSRF、注入攻击等
 add_security_middlewares(app)
 
 # 注册 API 路由
-app.include_router(user_router, prefix="/users", tags=["Users"])
-app.include_router(auth_router, prefix="/auth", tags=["Authentication"])  # 注册认证路由
-app.include_router(repo_router, prefix="/repos", tags=["Repos"])
-app.include_router(file_router, prefix="/files", tags=["Files"])
-app.include_router(chat_router, prefix="/chat", tags=["Chat"])
-app.include_router(process_router, prefix="/process", tags=["Process"])
+# 这里将各个模块的路由注册到主应用中，并设置URL前缀和标签
+# 例如，所有用户相关的API都以/users开头，并在文档中归类为"Users"标签
+app.include_router(user_router, prefix="/users", tags=["Users"])  # 用户管理相关API
+app.include_router(auth_router, prefix="/auth", tags=["Authentication"])  # 认证相关API
+app.include_router(repo_router, prefix="/repos", tags=["Repos"])  # 仓库管理相关API
+app.include_router(file_router, prefix="/files", tags=["Files"])  # 文件处理相关API
+app.include_router(chat_router, prefix="/chat", tags=["Chat"])  # 聊天功能相关API
+app.include_router(process_router, prefix="/process", tags=["Process"])  # 处理流程相关API
 
 @app.get("/", tags=["Health"])
 async def root():
     """
     健康检查端点
     
+    这个端点主要用于监控系统，可以用来检查API服务是否正常运行。
+    当你调用这个端点时，如果返回预期的响应，说明API服务器正常工作。
+    这对于部署和维护非常重要，可以结合监控工具使用。
+    
     返回:
-        dict: 包含API状态信息的字典
+        dict: 包含API状态信息的字典，包括状态标识和版本号
     """
     return {"status": "healthy", "api_version": "1.0.0"}
 
 if __name__ == "__main__":
+    # 当直接运行此文件时，启动开发服务器
+    # 在生产环境中，通常会使用gunicorn或uvicorn的命令行启动
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)  # reload=True启用热重载，代码修改后自动重启服务器

@@ -1,4 +1,16 @@
+"""
+聊天功能API路由模块
 
+这个模块实现了与聊天(Chat)相关的所有API端点，支持用户与AI助手进行对话交互。
+主要功能包括：
+1. 获取聊天历史 - 检索用户在特定仓库的聊天记录
+2. 基础聊天 - 用户发送文本消息与AI助手交流
+3. 文件聊天 - 用户可以上传文件并在聊天中引用和分析文件内容
+4. 多文件聊天 - 用户可以同时引用多个文件进行综合分析
+
+聊天功能是本系统的核心交互方式，允许用户通过自然语言与AI助手沟通，
+并结合上传的金融文件进行风险评估和分析。
+"""
 import ast
 from datetime import datetime
 import json
@@ -18,7 +30,11 @@ from services.risk_prediction.prediction import predict_all
 
 from db.db_util import create_or_get_chat_history,update_chat_history,get_json_res,get_file_metadata_by_id,get_repo_by_id
 from .repo import convert_objectid
+
+# 创建路由器实例
 router = APIRouter()
+
+# AI助手的系统提示，定义了AI的角色、背景、技能和工作流程
 SYSTEM_PROMPT = """- Role: 金融风险评估专家和高级金融分析师
 - Background: 用户拥有一个本地小模型，能够根据金融文件信息计算出诈骗概率。用户希望借助大模型的深度分析能力，结合诈骗概率和金融文件内容，获取关于诈骗风险的详细理由和针对性建议。
 - Profile: 你是一位在金融风险评估领域经验丰富的专家，精通金融文件分析、风险识别和欺诈检测。你能够快速准确地解读金融文件的关键信息，并结合诈骗概率数据，提供全面且具有实际操作性的建议。
@@ -44,60 +60,88 @@ SYSTEM_PROMPT = """- Role: 金融风险评估专家和高级金融分析师
 下面是用户要求：
     """ 
 
+# 创建AI服务实例，用于处理聊天请求
 ai_service = AIService()
+
 @router.get("/")
 async def get_chat(user_id: str, repo_id: str):
     """
-    获取指定用户和仓库的聊天记录。
-
+    获取指定用户和仓库的聊天历史记录API
+    
+    详细说明:
+    此端点用于检索特定用户在特定仓库下的所有聊天记录。
+    聊天记录包含用户提问和AI助手回答的完整历史。
+    
+    流程:
+    1. 根据用户ID和仓库ID获取或创建聊天历史
+    2. 处理聊天文本中的特殊字符，确保JSON格式正确
+    3. 返回处理后的聊天历史
+    
     参数:
-        user_id (str): 用户的ID。
-        repo_id (str): 仓库的ID。
-
+        user_id (str): 用户的唯一标识符
+        repo_id (str): 仓库的唯一标识符
+        
     返回:
-        ChatHistory: 聊天记录对象。
+        ChatHistory: 包含聊天消息列表的聊天历史对象
     """
+    # 获取或创建聊天历史
     chat_history = create_or_get_chat_history(user_id, repo_id)
     
+    # 调试输出
     print("\n\n\n")
     print(chat_history)
     print("\n\n\n")
     print(type(chat_history))
     
-        
+    # 转换ObjectId为字符串
     chat_history = convert_objectid(chat_history)
     
-    # 将 texts 中的每个对象转换为字典
+    # 处理texts中的每个对象，转换为标准字典格式
     for text in chat_history["texts"]:
         print(text)
         print("\n\n\n\n\n\n")
+        # 处理引号，确保JSON格式正确
         text["question"] = text["question"].replace('"', '\\\"')
         text["answer"] = text["answer"].replace('"', '\\\"')
         text["question"] = text["question"].replace("'", '"')
         text["answer"] = text["answer"].replace("'", '"')
         
-        
+        # 调试输出
         print(text["answer"])
+        # 将字符串转换为JSON对象
         text["question"] = json.loads(text["question"])
         text["answer"] = json.loads(text["answer"])
     
+    # 返回处理后的聊天历史
     return chat_history
 
 
 @router.post("/{user_id}/{repo_id}", response_model=Message)
 async def chat(message: str, user_id: str, repo_id: str):
     """
-    处理用户的聊天请求。
-
+    基础文本聊天API
+    
+    详细说明:
+    此端点处理用户的纯文本聊天请求，不包含文件。
+    用户发送消息后，系统将消息传递给AI服务，生成响应，
+    并将对话记录保存到数据库。
+    
+    流程:
+    1. 创建用户消息对象
+    2. 调用AI服务生成响应
+    3. 更新聊天历史记录
+    4. 返回AI助手的响应消息
+    
     参数:
-        message (str): 用户发送的消息。
-        user_id (str): 用户的ID。
-        repo_id (str): 仓库的ID。
-
+        message (str): 用户发送的文本消息
+        user_id (str): 用户的唯一标识符
+        repo_id (str): 仓库的唯一标识符
+        
     返回:
-        Message: 助手的响应消息。
+        Message: AI助手的响应消息对象
     """
-    messageObj =Message(sayer="user", text=message,timestamp=datetime.now())
+    # 创建用户消息对象
+    messageObj = Message(sayer="user", text=message, timestamp=datetime.now())
     response_text = await ai_service.chat(message)
     create_or_get_chat_history(user_id, repo_id)
     
@@ -110,23 +154,29 @@ async def chat(message: str, user_id: str, repo_id: str):
 @router.post("/{user_id}/{repo_id}/with-file", response_model=Message)
 async def chat_with_file(user_id: str, repo_id: str, message: str, file: UploadFile = File(...)):
     """
-    处理包含文件上传的聊天请求。
-
+    带文件上传的聊天API
+    
+    详细说明:
+    此端点允许用户上传一个文件并同时发送消息，AI助手将分析文件内容
+    并结合用户消息生成响应。支持多种文件格式，包括文本文件、表格和图像。
+    
+    流程:
+    1. 接收用户消息和上传的文件
+    2. 保存文件到临时目录
+    3. 处理文件内容，提取结构化数据
+    4. 运行风险预测模型(如果适用)
+    5. 组合所有信息调用AI服务生成响应
+    6. 更新聊天历史
+    7. 返回AI助手的响应
+    
     参数:
-        user_id (str): 用户的ID。
-        repo_id (str): 仓库的ID。
-        message (str): 用户发送的消息。
-        file (UploadFile): 用户上传的文件。
-
+        user_id (str): 用户的唯一标识符
+        repo_id (str): 仓库的唯一标识符
+        message (str): 用户发送的文本消息
+        file (UploadFile): 用户上传的文件
+        
     返回:
-        Message: 助手的响应消息。
-
-    功能:
-        1. 获取聊天记录。
-        2. 处理上传的文件并将其保存到指定目录。
-        3. 调用数据结构化和风险预测的主要处理逻辑。
-        4. 根据文件内容和风险预测结果生成系统提示。
-        5. 调用AI服务生成回复并更新聊天记录。
+        Message: AI助手的响应消息对象
     """
     create_or_get_chat_history(user_id, repo_id)
     question = message
@@ -226,7 +276,28 @@ async def chat_with_file(user_id: str, repo_id: str, message: str, file: UploadF
 @router.post("/{user_id}/{repo_id}/file", response_model=Message)
 async def chat_with_file_id(user_id: str, repo_id: str, file_id: str, message: str):
     """
-    处理单个文件的聊天请求，支持不同位置的文件ID。
+    使用已上传文件ID的聊天API
+    
+    详细说明:
+    此端点允许用户引用已上传到系统的文件进行聊天。
+    用户通过提供文件ID(而非重新上传文件)，可以讨论和分析系统中已存在的文件。
+    
+    流程:
+    1. 接收用户消息和文件ID
+    2. 从数据库获取文件元数据
+    3. 获取文件的JSON分析结果
+    4. 组合信息调用AI服务生成响应
+    5. 更新聊天历史
+    6. 返回AI助手的响应
+    
+    参数:
+        user_id (str): 用户的唯一标识符
+        repo_id (str): 仓库的唯一标识符
+        file_id (str): 系统中已存在文件的唯一标识符
+        message (str): 用户发送的文本消息
+        
+    返回:
+        Message: AI助手的响应消息对象
     """
     # 获取仓库信息
     repo_info = get_repo_by_id(repo_id)
@@ -293,7 +364,28 @@ async def chat_with_multiple_files(
     message: str
 ):
     """
-    处理多文件聊天请求，支持不同位置的文件ID。
+    多文件聊天API
+    
+    详细说明:
+    此端点支持用户同时引用多个已上传的文件进行聊天。
+    AI助手将综合分析所有引用文件的内容，提供更全面的答复。
+    
+    流程:
+    1. 接收用户消息和多个文件ID
+    2. 循环处理每个文件ID，获取文件元数据和JSON分析结果
+    3. 整合所有文件数据和用户问题
+    4. 调用AI服务生成综合分析响应
+    5. 更新聊天历史
+    6. 返回AI助手的响应
+    
+    参数:
+        user_id (str): 用户的唯一标识符
+        repo_id (str): 仓库的唯一标识符
+        file_ids (List[str]): 多个文件的ID列表
+        message (str): 用户发送的文本消息
+        
+    返回:
+        Message: AI助手的响应消息对象
     """
     # 获取仓库信息
     repo_info = get_repo_by_id(repo_id)
