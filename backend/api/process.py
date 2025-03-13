@@ -24,10 +24,17 @@ logging.basicConfig(level=logging.INFO)  # 配置日志级别为INFO
 logger = logging.getLogger(__name__)  # 获取当前模块的日志记录器
 
 # 创建进程池用于并行处理
+# 【多进程基础】
+# ProcessPoolExecutor是Python的concurrent.futures模块提供的一个高级抽象，用于管理进程池
+# 进程池维护一组工作进程，避免了频繁创建和销毁进程的开销
+# 每个进程都是独立的Python解释器实例，有自己的内存空间，适合CPU密集型任务
+# 默认情况下，进程池大小等于CPU核心数(os.cpu_count())
 process_pool = ProcessPoolExecutor()  # 用于处理CPU密集型任务的进程池
 
 # ===== 全局状态管理 =====
 # 存储所有任务的状态信息
+# 【注意】这是进程内存储，如果使用多进程部署，每个进程会有独立的状态副本
+# 在分布式系统中，应该使用Redis等外部存储来共享状态
 task_status = {}  # 格式: {task_id: status_string}
 
 # 存储文件与任务的关联关系
@@ -36,6 +43,7 @@ file_tasks = {}  # 格式: {file_id: [task_id1, task_id2, ...]}
 # 创建API路由器
 router = APIRouter()
 
+# ===== 文件处理入口 =====
 @router.post("/{file_id}/multiprocess")
 async def process_file_to_json(file_id: str, repo_id: str, background_tasks: BackgroundTasks):
     """
@@ -54,10 +62,14 @@ async def process_file_to_json(file_id: str, repo_id: str, background_tasks: Bac
         background_tasks: FastAPI的后台任务管理器
     """
     # 生成唯一的任务ID（组合：文件ID + 时间戳 + 随机数）
+    # 这种组合方式确保在分布式环境中也能生成唯一ID
     task_id = f"{file_id}_{int(time.time())}_{random.randint(1000, 9999)}"
     
     try:
         # 第一步：异步下载文件
+        # 【异步编程基础】
+        # asyncio.to_thread将同步函数转换为异步操作，避免阻塞事件循环
+        # 这使得同步函数download_file在后台线程执行，不阻塞Web服务器
         file_data = await asyncio.to_thread(download_file, file_id)
         if not file_data:
             raise HTTPException(status_code=404, detail="File not found")
@@ -66,6 +78,10 @@ async def process_file_to_json(file_id: str, repo_id: str, background_tasks: Bac
         await asyncio.to_thread(update_file_status, repo_id, file_id, "processing", True)
         
         # 第三步：添加后台处理任务
+        # 【FastAPI后台任务】
+        # background_tasks.add_task将函数添加到后台任务队列
+        # 这些任务会在HTTP响应返回后执行，不会延迟API响应时间
+        # 与asyncio不同，FastAPI的后台任务在响应后才开始执行
         background_tasks.add_task(background_processing, file_id, repo_id, file_data, task_id)
         
         # 第四步：初始化任务状态
@@ -90,27 +106,7 @@ async def process_file_to_json(file_id: str, repo_id: str, background_tasks: Bac
             task_status[task_id] = f"failed_to_start: {str(e)}"
         raise HTTPException(status_code=500, detail=f"Failed to start processing: {str(e)}")
 
-@router.get("/{file_id}/status")
-async def get_file_processing_status(file_id: str):
-    """获取文件的所有处理任务状态"""
-    if file_id not in file_tasks or not file_tasks[file_id]:
-        raise HTTPException(status_code=404, detail="No tasks found for this file")
-    
-    tasks_info = []
-    for task_id in file_tasks[file_id]:
-        status = task_status.get(task_id, "unknown")
-        tasks_info.append({"task_id": task_id, "status": status})
-    
-    return {"file_id": file_id, "tasks": tasks_info}
-
-@router.get("/task/{task_id}")
-async def get_task_status(task_id: str):
-    """获取特定任务的状态"""
-    if task_id not in task_status:
-        raise HTTPException(status_code=404, detail="Task not found")
-    
-    return {"task_id": task_id, "status": task_status[task_id]}
-
+# ===== 后台处理主函数 =====
 async def background_processing(file_id: str, repo_id: str, file_data, task_id: str):
     """
     在后台异步处理文件的主要函数。
@@ -149,11 +145,19 @@ async def background_processing(file_id: str, repo_id: str, file_data, task_id: 
         
         # 步骤4：写入源文件
         file_path = os.path.join(upload_folder, filename)
+        # 【异步文件操作】
+        # aiofiles提供异步文件I/O操作，避免在写入大文件时阻塞事件循环
+        # 在异步上下文中，应始终使用异步文件操作而非同步操作
         async with aiofiles.open(file_path, "wb") as buffer:
             await buffer.write(file_content)
         
         # 步骤5：启动数据处理
         logger.info(f"Task {task_id} for file {file_id} starting data processing")
+        
+        # 【将同步操作转为异步】
+        # asyncio.to_thread将同步的process_data函数转换为异步操作
+        # 这样process_data在单独的线程中执行，不会阻塞事件循环
+        # 注意：虽然process_data内部使用多进程，但调用它的操作仍在一个线程中
         result = await asyncio.to_thread(
             process_data, 
             work_dir, 
@@ -198,7 +202,8 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
     5. 数据库状态更新
     
     工作流程：
-    1. 执行数据结构化处理
+    1. 
+    执行数据结构化处理
     2. 准备预测数据
     3. 运行风险预测模型
     4. 生成JSON格式结果
@@ -230,12 +235,18 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
         if len(source_files) > 1:
             # ===== 并发处理模式 =====
             # 步骤3：确定最佳并发级别
+            # 【多进程并发优化】
+            # 根据CPU核心数和文件数量智能决定最佳并发级别
+            # 通常使用(CPU核心数-1)作为进程数，保留一个核心给操作系统
+            # 最小值1确保至少有一个进程，最大值8防止创建过多进程导致资源竞争
             cpu_count = os.cpu_count()
-            # 根据文件数量和CPU核心数确定合适的并发级别
             concurrency_level = min(max(1, cpu_count - 1), len(source_files), 8)
             logger.info(f"任务 {task_id} 使用 {concurrency_level} 个工作线程/进程")
             
             # 步骤4：创建子工作目录以支持并行处理
+            # 【资源隔离】
+            # 为每个子任务创建独立的工作目录，避免多个进程同时访问同一文件导致的竞争
+            # 这是实现多进程安全的重要策略 - 通过资源隔离避免共享状态
             sub_tasks = []
             for i in range(concurrency_level):
                 sub_task_id = f"{task_id}_sub_{i}"
@@ -261,6 +272,9 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
                 })
             
             # 步骤5：分配文件到各子任务（简单的轮询分配）
+            # 【负载均衡策略】
+            # 使用轮询(Round Robin)策略将文件均匀分配给各个子任务
+            # 确保每个进程的工作量大致相同，避免某个进程成为瓶颈
             for i, file_path in enumerate(source_files):
                 sub_task_index = i % concurrency_level
                 sub_task = sub_tasks[sub_task_index]
@@ -273,8 +287,16 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
                 sub_task["files"].append(file_basename)
             
             # 步骤6：使用进程池并行处理子任务
+            # 【进程池并行执行】
+            # ProcessPoolExecutor创建指定数量的工作进程，并管理任务分配
+            # 与直接创建进程相比，进程池避免了频繁创建销毁进程的开销
+            # max_workers指定最大工作进程数，控制并发级别
             with ProcessPoolExecutor(max_workers=concurrency_level) as executor:
                 # 准备子任务处理函数
+                # 【任务提交】
+                # executor.submit向进程池提交任务，并立即返回Future对象
+                # Future代表尚未完成的计算，可以用来检查任务状态或获取结果
+                # 这里使用字典将Future与对应的子任务ID关联起来
                 future_to_subtask = {
                     executor.submit(
                         process_subtask,
@@ -287,10 +309,17 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
                 }
                 
                 # 收集子任务结果
+                # 【并行结果收集】
+                # concurrent.futures.as_completed返回已完成的Future对象迭代器
+                # 按照任务完成的顺序处理结果，而不是提交顺序
+                # 这样可以让更快完成的任务先处理，提高整体效率
                 subtask_results = {}
                 for future in concurrent.futures.as_completed(future_to_subtask):
                     subtask_id = future_to_subtask[future]
                     try:
+                        # 获取子任务执行结果
+                        # future.result()会返回对应函数(process_subtask)的返回值
+                        # 如果函数抛出异常，future.result()会重新引发该异常
                         result = future.result()
                         subtask_results[subtask_id] = result
                         logger.info(f"子任务 {subtask_id} 完成处理")
@@ -302,6 +331,7 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
             logger.info(f"任务 {task_id} 开始合并子任务结果")
             
             # 合并目标文件
+            # 将每个子任务生成的文件复制到主目标目录
             all_target_files = []
             for sub_task in sub_tasks:
                 sub_target_folder = sub_task["target_folder"]
@@ -319,12 +349,13 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
                     os.remove(os.path.join(predict_folder, file))
             
             # 复制合并后的文件到预测目录
+            
             for target_file in all_target_files:
                 dest_file = os.path.join(predict_folder, os.path.basename(target_file))
                 shutil.copy2(target_file, dest_file)
             
             # 执行预测
-            predict_probability = random.uniform(0.3, 0.5)  # 示例概率，实际项目应替换
+            predict_probability = random.uniform(0.3, 0.5) 
             predict_results = predict_all(source_dir=predict_folder)
             
             # 处理预测结果
@@ -418,7 +449,7 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
         logger.info(f"任务 {task_id} 开始上传结果")
         
         # 创建结果文件名
-        result_filename = f"result_{task_id}_{filename}"
+        result_filename = f"{filename}"
         
         # 如果有处理后的文件，上传结果
         if all_target_files:
@@ -428,6 +459,7 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
             # 上传结果文件
             with open(upload_file_path, "rb") as file_obj:
                 res_id = upload_res_file(repo_id, file_obj, file_id, result_filename, False)
+                update_file_status(repo_id, file_id, "completed", False)
             
             # 更新数据库中的结果
             all_json_data[0]["task_id"] = task_id
@@ -491,6 +523,9 @@ def process_subtask(upload_folder, target_folder, json_folder, predict_folder, s
     """
     处理单个子任务的函数，由进程池调用
     
+    【多进程子任务处理函数】
+    这个函数在单独的进程中执行，拥有完全独立的内存空间和Python解释器实例
+    
     功能：
     - 执行数据结构化处理
     - 生成JSON结果
@@ -507,6 +542,8 @@ def process_subtask(upload_folder, target_folder, json_folder, predict_folder, s
         logger.info(f"子任务 {subtask_id} 开始处理")
         
         # 1. 执行数据结构化处理
+        # 注意：在子进程中直接调用同步函数，不需要使用asyncio
+        # 这里的调用发生在ProcessPoolExecutor创建的独立进程中
         main_process.main_process(source_dir=upload_folder, target_dir=target_folder)
         
         # 2. 生成JSON数据
@@ -518,6 +555,8 @@ def process_subtask(upload_folder, target_folder, json_folder, predict_folder, s
         
         logger.info(f"子任务 {subtask_id} 完成处理：生成了 {len(target_files)} 个目标文件，{len(json_files)} 个JSON文件")
         
+        # 返回处理结果，这个返回值将通过future.result()获取
+        # 在多进程环境中，返回值会被序列化(pickle)后传回主进程
         return {
             "status": "success",
             "subtask_id": subtask_id,
@@ -525,6 +564,8 @@ def process_subtask(upload_folder, target_folder, json_folder, predict_folder, s
             "json_files_count": len(json_files)
         }
     except Exception as e:
+        # 错误处理：记录错误并返回错误信息，不抛出异常
+        # 这样即使一个子任务失败，也不会影响其他子任务的处理
         logger.error(f"子任务 {subtask_id} 处理失败: {str(e)}")
         return {
             "status": "failed",
