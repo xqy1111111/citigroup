@@ -11,8 +11,8 @@ FastAPI主应用程序入口
 
 理解这个文件对于掌握整个项目结构至关重要
 """
+from fastapi.responses import JSONResponse
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import Response
 from api.user import router as user_router
 from api.repo import router as repo_router
 from api.auth import router as auth_router  # 导入认证路由
@@ -27,11 +27,12 @@ from core.redis_manager import redis_manager  # 导入Redis管理器
 from api.test_redis import router as test_redis_router  # 导入Redis测试路由
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-
+from core.middleware import add_security_middleware  # 从包中直接导入
 # 导入日志系统 - 使用增强版的Loguru和structlog
 from core.logging import setup_logging, logger, get_logger
 import logging
 import os
+from fastapi.responses import Response
 
 # 确定环境类型（开发、测试、生产）
 # 在生产环境中，通常会通过环境变量设置
