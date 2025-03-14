@@ -12,6 +12,7 @@ FastAPI主应用程序入口
 理解这个文件对于掌握整个项目结构至关重要
 """
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi.responses import Response
 from api.user import router as user_router
 from api.repo import router as repo_router
 from api.auth import router as auth_router  # 导入认证路由
@@ -20,7 +21,7 @@ from api.chat import router as chat_router
 from api.process import router as process_router
 from api.websocket import handle_websocket
 from fastapi.middleware.cors import CORSMiddleware
-from core.middleware import add_middleware  # 导入安全中间件函数
+from core.middleware import add_security_middleware  # 从包中直接导入
 from starlette.websockets import WebSocketState
 
 # 导入日志系统 - 使用增强版的Loguru和structlog
@@ -39,15 +40,15 @@ app = FastAPI(
     description="安全的后端API服务",
     version="1.0.0",
     # 添加联系信息和许可证信息，这些都会出现在API文档页面上
-    contact={
-        "name": "开发团队",
-        "email": "dev@example.com",
-    },
+  
     license_info={
         "name": "MIT",
         "url": "https://opensource.org/licenses/MIT",
     },
 )
+
+# 添加安全中间件（应该最先添加）
+add_security_middleware(app)
 
 # 配置日志系统
 # 根据环境设置不同的日志级别和格式
@@ -82,7 +83,6 @@ app.add_middleware(
 
 # 添加安全中间件
 # 安全中间件可以帮助防止各种常见的Web攻击，如XSS、CSRF、注入攻击等
-add_middleware(app)
 
 # 注册 API 路由
 # 这里将各个模块的路由注册到主应用中，并设置URL前缀和标签
