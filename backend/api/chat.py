@@ -376,73 +376,54 @@ async def chat_with_multiple_files(
     file_ids: List[str],
     message: str
 ):
-    """
-    多文件聊天API
-    
-    详细说明:
-    此端点支持用户同时引用多个已上传的文件进行聊天。
-    AI助手将综合分析所有引用文件的内容，提供更全面的答复。
-    
-    流程:
-    1. 接收用户消息和多个文件ID
-    2. 循环处理每个文件ID，获取文件元数据和JSON分析结果
-    3. 整合所有文件数据和用户问题
-    4. 调用AI服务生成综合分析响应
-    5. 更新聊天历史
-    6. 返回AI助手的响应
-    
-    参数:
-        user_id (str): 用户的唯一标识符
-        repo_id (str): 仓库的唯一标识符
-        file_ids (List[str]): 多个文件的ID列表
-        message (str): 用户发送的文本消息
-        
-    返回:
-        Message: AI助手的响应消息对象
-    """
     # 获取仓库信息
     repo_info = get_repo_by_id(repo_id)
-    print(repo_info)
-    print(type(repo_info))
+    if not repo_info:
+        raise HTTPException(status_code=404, detail="仓库未找到")
+    
+    print("仓库信息:", repo_info)
+    print("请求的文件IDs:", file_ids)
+    
     create_or_get_chat_history(user_id, repo_id)
-    
     store_message = Message(sayer="user", text=message, timestamp=datetime.now())
-    
     file_contents = []
     
     for file_id in file_ids:
+        print(f"处理文件ID: {file_id}")
         # 在files中查找文件
-        
-        files_match = [f for f in repo_info.get('files', []) if convert_objectid( f['file_id']) ==(file_id)]
+        files_match = [f for f in repo_info.get('files', []) if convert_objectid(f['file_id']) == (file_id)]
+        print(f"在files中匹配结果: {files_match}")
         
         # 在results中查找文件
         results_match = [r for r in repo_info.get('results', []) if convert_objectid(r['file_id']) == (file_id)]
+        print(f"在results中匹配结果: {results_match}")
         
-        # 确定要使用的文件ID
+        # 确定要使用的文件ID和元数据
         if files_match:
-            # 如果在files中找到，保持原file_id不变
-            actual_file_id = file_id
             file_metadata = files_match[0]
+            # 检查是否有处理结果
+            if "results" in file_metadata and file_metadata["results"]:
+                result_file_id = str(file_metadata["results"][0]["file_id"])
+            else:
+                print(f"文件 {file_id} 没有处理结果")
+                continue
         elif results_match:
-            # 如果在results中找到，使用source_file
-            actual_file_id = results_match[0]['source_file']
             file_metadata = results_match[0]
+            result_file_id = str(file_metadata["file_id"])
         else:
-            # 如果文件未找到，跳过
-            print("reach here")
-
+            print(f"未找到文件ID: {file_id}")
             continue
         
         # 获取JSON内容
-        json_res = get_json_res(actual_file_id)
-        
+        json_res = get_json_res(result_file_id)
         if json_res is None:
+            print(f"无法获取文件的JSON内容: {result_file_id}")
             continue
         
-        # 获取诈骗概率，优先使用具体的概率值
+        # 获取诈骗概率
         fraud_probability = (
             file_metadata.get('status') if 
-            file_metadata.get('status') not in ['uploaded', None] 
+            file_metadata.get('status') not in ['uploaded', None, 'completed'] 
             else '未知'
         )
         
@@ -453,9 +434,12 @@ async def chat_with_multiple_files(
             "file_name": file_metadata.get('filename', '未知文件')
         })
     
-    # 如果没有有效文件，返回None
+    # 如果没有有效文件，返回错误
     if not file_contents:
-        return None
+        raise HTTPException(
+            status_code=400,
+            detail="无法处理任何请求的文件。请确保文件已经完成处理并且包含有效内容。"
+        )
     
     # 构建消息
     message_parts = [SYSTEM_PROMPT, message]
@@ -469,7 +453,7 @@ async def chat_with_multiple_files(
     full_message = "\n".join(message_parts)
     
     # 调用AI服务
-    print(full_message)
+    print("发送给AI的完整消息:", full_message)
     response_text = await ai_service.chat(full_message)
     
     # 创建响应消息

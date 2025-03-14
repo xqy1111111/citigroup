@@ -21,7 +21,6 @@ from api.chat import router as chat_router
 from api.process import router as process_router
 from api.websocket import handle_websocket
 from fastapi.middleware.cors import CORSMiddleware
-from core.middleware import add_middleware  # 导入安全中间件函数
 from starlette.websockets import WebSocketState
 from core.redis_manager import redis_manager  # 导入Redis管理器
 from api.test_redis import router as test_redis_router  # 导入Redis测试路由
@@ -110,8 +109,8 @@ app.add_middleware(CSPMiddleware)
 # 配置CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=["http://localhost:3000"],  # 指定允许的前端源
+    allow_credentials=True,  # 允许携带凭证
     allow_methods=["*"],
     allow_headers=["*"],
 )
