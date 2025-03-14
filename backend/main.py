@@ -11,15 +11,17 @@ FastAPI主应用程序入口
 
 理解这个文件对于掌握整个项目结构至关重要
 """
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from api.user import router as user_router
 from api.repo import router as repo_router
 from api.auth import router as auth_router  # 导入认证路由
 from api._file import router as file_router
 from api.chat import router as chat_router
 from api.process import router as process_router
+from api.websocket import handle_websocket
 from fastapi.middleware.cors import CORSMiddleware
 from core.middleware import add_middleware  # 导入安全中间件函数
+from starlette.websockets import WebSocketState
 
 # 导入日志系统 - 使用增强版的Loguru和structlog
 from core.logging import setup_logging, logger, get_logger
@@ -72,10 +74,10 @@ else:
 # 通过CORS，我们可以安全地放宽这一限制
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # 允许的前端域名列表，包括Vue的5173端口
+    allow_origins=["*"],  # 允许所有来源，或者使用特定域名列表
     allow_credentials=True,  # 允许发送凭证（如cookies）
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # 允许的HTTP方法
-    allow_headers=["Authorization", "Content-Type", "Accept"],  # 允许的HTTP请求头
+    allow_methods=["*"],  # 允许所有HTTP方法
+    allow_headers=["*"],  # 允许所有请求头
 )
 
 # 添加安全中间件
@@ -118,6 +120,18 @@ async def root(request: Request):
         "api_version": "1.0.0",
         "environment": ENV
     }
+
+@app.websocket("/ws/{repo_id}")
+async def websocket_endpoint(websocket: WebSocket, repo_id: str):
+    token = websocket.query_params.get("token")
+    try:
+        await handle_websocket(websocket, repo_id, token)
+    except WebSocketDisconnect:
+        print(f"WebSocket连接断开: {repo_id}")
+    except Exception as e:
+        print(f"WebSocket错误: {str(e)}")
+        if websocket.client_state != WebSocketState.DISCONNECTED:
+            await websocket.close(code=1000)
 
 # 异常处理
 @app.exception_handler(Exception)

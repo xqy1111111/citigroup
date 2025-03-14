@@ -406,7 +406,7 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
             for _file in os.listdir(target_folder):
                 shutil.copy(os.path.join(target_folder, _file), os.path.join(predict_folder, _file))
             
-            # 生成随机预测概率（示例）
+            
             predict_probability = random.uniform(0.3, 0.5)
             
             # 执行实际预测
