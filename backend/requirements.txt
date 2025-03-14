@@ -123,4 +123,8 @@ structlog==24.1.0  # 结构化日志库，用于生成结构化日志输出
 python-json-logger==2.0.7  # JSON格式日志处理
 loguru==0.7.2  # 简单而强大的日志库，替代OpenTelemetry
 rich==13.7.1  # 增强终端输出，用于开发环境中的日志美化
+
+# Redis相关依赖
+redis==5.0.1
+aioredis==2.0.1
  

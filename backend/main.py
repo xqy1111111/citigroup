@@ -12,6 +12,9 @@ FastAPI主应用程序入口
 理解这个文件对于掌握整个项目结构至关重要
 """
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
 from api.user import router as user_router
 from api.repo import router as repo_router
 from api.auth import router as auth_router  # 导入认证路由
@@ -19,9 +22,12 @@ from api._file import router as file_router
 from api.chat import router as chat_router
 from api.process import router as process_router
 from api.websocket import handle_websocket
-from fastapi.middleware.cors import CORSMiddleware
 from core.middleware import add_middleware  # 导入安全中间件函数
 from starlette.websockets import WebSocketState
+from core.redis_manager import redis_manager  # 导入Redis管理器
+from api.test_redis import router as test_redis_router  # 导入Redis测试路由
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 
 # 导入日志系统 - 使用增强版的Loguru和structlog
 from core.logging import setup_logging, logger, get_logger
@@ -39,10 +45,7 @@ app = FastAPI(
     description="安全的后端API服务",
     version="1.0.0",
     # 添加联系信息和许可证信息，这些都会出现在API文档页面上
-    contact={
-        "name": "开发团队",
-        "email": "dev@example.com",
-    },
+   
     license_info={
         "name": "MIT",
         "url": "https://opensource.org/licenses/MIT",
@@ -68,16 +71,43 @@ else:
     root_logger = setup_logging(app, level="INFO")
     logger.info(f"应用启动于开发环境", environment="development")
 
-# 配置CORS(跨域资源共享)中间件
-# CORS是一种安全机制，控制哪些外部网站可以访问你的API
-# 默认情况下，浏览器禁止网页向不同源的服务器发送请求，这就是"同源策略"
-# 通过CORS，我们可以安全地放宽这一限制
+class CSPMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        if request.url.path in ["/docs", "/redoc", "/openapi.json"]:
+            # 为Swagger UI和ReDoc放宽CSP限制
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "img-src 'self' https: data:; "
+                "style-src 'self' 'unsafe-inline' https:; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; "
+                "connect-src 'self' https:; "
+                "font-src 'self' https: data:; "
+                "frame-src 'self' https:; "
+                "worker-src 'self' blob:;"
+            )
+        else:
+            # 为其他路径使用更严格的CSP
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "img-src 'self' data:; "
+                "style-src 'self' 'unsafe-inline'; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+                "connect-src 'self'; "
+                "font-src 'self' data:;"
+            )
+        return response
+
+# 添加CSP中间件
+app.add_middleware(CSPMiddleware)
+
+# 配置CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 允许所有来源，或者使用特定域名列表
-    allow_credentials=True,  # 允许发送凭证（如cookies）
-    allow_methods=["*"],  # 允许所有HTTP方法
-    allow_headers=["*"],  # 允许所有请求头
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # 添加安全中间件
@@ -93,6 +123,7 @@ app.include_router(repo_router, prefix="/repos", tags=["Repos"])  # 仓库管理
 app.include_router(file_router, prefix="/files", tags=["Files"])  # 文件处理相关API
 app.include_router(chat_router, prefix="/chat", tags=["Chat"])  # 聊天功能相关API
 app.include_router(process_router, prefix="/process", tags=["Process"])  # 处理流程相关API
+app.include_router(test_redis_router, tags=["Redis-Test"])  # 添加Redis测试路由
 
 @app.get("/", tags=["Health"])
 async def root(request: Request):
@@ -166,7 +197,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
     
     # 返回友好的错误信息
-    from fastapi.responses import JSONResponse
     return JSONResponse(
         status_code=500,
         content={
@@ -174,6 +204,20 @@ async def global_exception_handler(request: Request, exc: Exception):
             "trace_id": trace_id  # 返回trace_id便于问题追踪
         }
     )
+
+@app.on_event("startup")
+async def startup_event():
+    """应用启动时的初始化操作"""
+    # 初始化Redis连接池
+    await redis_manager.init_redis_pool()
+    logger.info("应用启动完成，Redis连接池已初始化")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """应用关闭时的清理操作"""
+    # 关闭Redis连接池
+    await redis_manager.close()
+    logger.info("应用关闭，Redis连接池已关闭")
 
 if __name__ == "__main__":
     # 当直接运行此文件时，启动开发服务器
