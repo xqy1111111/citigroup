@@ -12,6 +12,9 @@ from fastapi import APIRouter, HTTPException, Depends
 from db.db_util import create_user, authenticate_user, get_user_by_id
 from models.user import UserCreate, UserResponse, UserAuth, AuthResponse
 
+# 添加get_current_user依赖项导入
+from core.security import get_current_user
+
 # 创建路由器实例
 # APIRouter是FastAPI提供的一种组织端点的方式，可以将相关端点组合在一起
 router = APIRouter()
@@ -81,6 +84,35 @@ async def authenticate_user_request(user: UserAuth):
     # 认证成功，返回用户ID
     return AuthResponse(user_id=user_id)
 
+# 添加一个特殊路由处理/users/me请求
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_profile(current_user_id: str = Depends(get_current_user)):
+    """
+    获取当前已认证用户的信息API
+    
+    详细说明:
+    这个端点获取当前已登录用户的详细信息。
+    它使用JWT令牌中的user_id来识别当前用户。
+    
+    参数:
+        current_user_id: str - 从JWT令牌中提取的用户ID，通过get_current_user依赖项获取
+        
+    返回:
+        UserResponse - 当前用户的详细信息
+        
+    错误:
+        401 Unauthorized - 如果请求中没有有效的JWT令牌
+        404 Not Found - 如果找不到对应ID的用户
+    """
+    # 调用数据库工具函数获取用户信息
+    user = get_user_by_id(current_user_id)
+    
+    # 如果用户不存在，抛出404错误
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # 将MongoDB文档转换为API响应格式并返回
+    return objectID2str(user)
 
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(user_id: str):

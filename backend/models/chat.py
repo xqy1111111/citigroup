@@ -63,8 +63,7 @@ class ChatHistory(BaseModel):
     user_id: str = Field(..., description="聊天历史所属的用户ID")
     repo_id: str = Field(..., description="聊天历史关联的仓库ID")
     texts: List[text] = [] # 恢复原始的空列表初始化方式
-    _id: str = Field(..., description="MongoDB文档ID")
-    
+    _id: str 
     class Config:
         """
         模型配置

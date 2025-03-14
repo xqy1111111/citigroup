@@ -19,7 +19,7 @@ from api._file import router as file_router
 from api.chat import router as chat_router
 from api.process import router as process_router
 from fastapi.middleware.cors import CORSMiddleware
-from core.middleware import add_security_middlewares  # 导入安全中间件函数
+from core.middleware import add_middleware  # 导入安全中间件函数
 
 # 导入日志系统 - 使用增强版的Loguru和structlog
 from core.logging import setup_logging, logger, get_logger
@@ -62,8 +62,8 @@ elif ENV == "testing":
     root_logger = setup_logging(app, level="DEBUG")
     logger.info(f"应用启动于测试环境", environment="testing")
 else:
-    # 开发环境使用最详细的日志级别
-    root_logger = setup_logging(app, level="DEBUG")
+    # 开发环境使用INFO级别的日志，减少不必要的调试信息
+    root_logger = setup_logging(app, level="INFO")
     logger.info(f"应用启动于开发环境", environment="development")
 
 # 配置CORS(跨域资源共享)中间件
@@ -80,7 +80,7 @@ app.add_middleware(
 
 # 添加安全中间件
 # 安全中间件可以帮助防止各种常见的Web攻击，如XSS、CSRF、注入攻击等
-add_security_middlewares(app)
+add_middleware(app)
 
 # 注册 API 路由
 # 这里将各个模块的路由注册到主应用中，并设置URL前缀和标签
@@ -165,4 +165,35 @@ if __name__ == "__main__":
     # 当直接运行此文件时，启动开发服务器
     # 在生产环境中，通常会使用gunicorn或uvicorn的命令行启动
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)  # reload=True启用热重载，代码修改后自动重启服务器
+    
+    # 配置uvicorn日志
+    log_config = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "simple": {
+                "format": "%(message)s",  # 简化的日志格式
+            },
+        },
+        "handlers": {
+            "default": {
+                "formatter": "simple",
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stderr",
+            },
+        },
+        "loggers": {
+            "uvicorn": {"handlers": ["default"], "level": "INFO"},
+            "uvicorn.error": {"handlers": ["default"], "level": "INFO"},
+            "uvicorn.access": {"handlers": ["default"], "level": "INFO", "propagate": False},
+        },
+    }
+    
+    # 启动服务器，使用自定义日志配置
+    uvicorn.run(
+        "main:app", 
+        host="0.0.0.0", 
+        port=8000, 
+        reload=True,  # reload=True启用热重载，代码修改后自动重启服务器
+        log_config=log_config
+    )

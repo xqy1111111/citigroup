@@ -346,6 +346,7 @@ class CORSMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.allow_origins = allow_origins or ["*"]
         self.allow_methods = allow_methods or ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
+        # 明确添加常用的请求头
         self.allow_headers = allow_headers or ["*"]
         self.allow_credentials = allow_credentials
         self.max_age = max_age
@@ -386,9 +387,15 @@ class CORSMiddleware(BaseHTTPMiddleware):
         headers = {
             "Access-Control-Allow-Origin": allow_origin,
             "Access-Control-Allow-Methods": ", ".join(self.allow_methods),
-            "Access-Control-Allow-Headers": ", ".join(self.allow_headers),
+            "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Origin, User-Agent", # 明确列出关键请求头
             "Access-Control-Max-Age": str(self.max_age)
         }
+        
+        # 如果设置了允许所有头部，替换为*
+        if self.allow_headers == ["*"]:
+            headers["Access-Control-Allow-Headers"] = "*"
+        else:
+            headers["Access-Control-Allow-Headers"] = ", ".join(self.allow_headers)
         
         # 如果允许凭据，添加对应头部
         if self.allow_credentials:
@@ -432,9 +439,9 @@ def add_middleware(app: FastAPI):
     # 添加CORS中间件(处理跨域资源共享)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # 允许所有源，生产环境应设置为特定域名
-        allow_methods=["*"],  # 允许所有HTTP方法
-        allow_headers=["*"],  # 允许所有请求头
+        allow_origins=["http://localhost:3000", "http://localhost:5173", "*"],  # 明确允许前端源
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # 明确列出所有允许的HTTP方法
+        allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "User-Agent", "X-Requested-With", "X-CSRF-Token"],  # 明确列出常用请求头
         allow_credentials=True  # 允许包含凭证(如cookies)
     )
     

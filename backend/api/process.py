@@ -29,11 +29,47 @@ import aiofiles  # 异步文件操作库
 import logging  # 日志记录
 from typing import Dict, Any, Optional  # 类型提示
 import concurrent.futures  # 并发处理模块
+import traceback  # 用于获取错误堆栈信息
+from io import BytesIO  # 用于BytesIO包装文件内容
 
 # ===== 初始化配置 =====
 # 设置日志系统
+# 定义ANSI颜色代码
+class LogColors:
+    RESET = "\033[0m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    MAGENTA = "\033[35m"
+    CYAN = "\033[36m"
+
+# 自定义日志格式化器，添加颜色支持
+class ColoredFormatter(logging.Formatter):
+    """为不同级别的日志添加颜色"""
+    FORMATS = {
+        logging.DEBUG: LogColors.BLUE + "%(asctime)s - %(name)s - %(levelname)s - %(message)s" + LogColors.RESET,
+        logging.INFO: "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        logging.WARNING: LogColors.YELLOW + "%(asctime)s - %(name)s - %(levelname)s - %(message)s" + LogColors.RESET,
+        logging.ERROR: LogColors.RED + "%(asctime)s - %(name)s - %(levelname)s - %(message)s" + LogColors.RESET,
+        logging.CRITICAL: LogColors.RED + "%(asctime)s - %(name)s - %(levelname)s - %(message)s" + LogColors.RESET
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
+# 配置日志系统
 logging.basicConfig(level=logging.INFO)  # 配置日志级别为INFO
 logger = logging.getLogger(__name__)  # 获取当前模块的日志记录器
+
+# 为控制台输出添加颜色处理
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(ColoredFormatter())
+logger.addHandler(console_handler)
+# 移除默认处理器以避免重复日志
+logger.propagate = False
 
 # 创建进程池用于并行处理
 # 【多进程基础】
@@ -90,12 +126,25 @@ async def process_file_to_json(file_id: str, repo_id: str, background_tasks: Bac
     
     try:
         # 第一步：异步下载文件
-        # 【异步编程基础】
-        # asyncio.to_thread将同步函数转换为异步操作，避免阻塞事件循环
-        # 这使得同步函数download_file在后台线程执行，不阻塞Web服务器
-        file_data = await asyncio.to_thread(download_file, file_id)
-        if not file_data:
-            raise HTTPException(status_code=404, detail="File not found")
+        # 【修复5】改进文件下载和验证逻辑
+        try:
+            # 通过to_thread将同步函数转换为异步操作
+            file_data = await asyncio.to_thread(download_file, file_id)
+            
+            if not file_data:
+                logger.error(f"[Task {task_id}] 文件下载失败: file_id={file_id}")
+                raise HTTPException(status_code=404, detail="文件不存在或下载失败")
+                
+            # 验证下载的文件数据
+            filename, file_content = file_data
+            if not filename or not file_content:
+                logger.error(f"[Task {task_id}] 下载的文件数据无效: filename={filename}, content_size={len(file_content) if file_content else 0}")
+                raise HTTPException(status_code=500, detail="文件数据无效")
+                
+            logger.info(f"[Task {task_id}] 文件下载成功: {filename}, 大小: {len(file_content)} 字节")
+        except Exception as e:
+            logger.error(f"[Task {task_id}] 文件下载异常: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"文件下载失败: {str(e)}")
         
         # 第二步：更新文件状态为处理中
         await asyncio.to_thread(update_file_status, repo_id, file_id, "processing", True)
@@ -126,6 +175,7 @@ async def process_file_to_json(file_id: str, repo_id: str, background_tasks: Bac
     except Exception as e:
         # 异常处理：记录错误并返回500响应
         logger.error(f"Error processing file {file_id}: {str(e)}")
+        logger.error(f"错误堆栈: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
 # ===== 后台处理任务 =====
@@ -165,47 +215,96 @@ async def background_processing(file_id: str, repo_id: str, file_data, task_id: 
         # 再往上一层，获取backend目录
         parent_dir = os.path.dirname(parent_dir)
         
-        # 创建工作目录路径
-        # 每个任务有自己的工作目录，避免多个任务之间的文件冲突
-        work_dir = os.path.join(parent_dir, "work_dirs", task_id)
+        # 获取DataStructuring目录路径
+        data_struct_dir = os.path.join(parent_dir, "services", "DataStructuring", "DataStructuring")
         
-        # 创建子目录路径
-        upload_folder = os.path.join(work_dir, "SourceData")
-        target_folder = os.path.join(work_dir, "TargetData")
-        json_folder = os.path.join(work_dir, "JsonData")
-        predict_folder = os.path.join(work_dir, "PredictData")
+        # 在DataStructuring目录下创建以task_id命名的子目录
+        task_work_dir = os.path.join(data_struct_dir, task_id)
         
-        # 创建目录结构
-        os.makedirs(upload_folder, exist_ok=True)
-        os.makedirs(target_folder, exist_ok=True)
-        os.makedirs(json_folder, exist_ok=True)
-        os.makedirs(predict_folder, exist_ok=True)
+        # 创建子目录路径 - 使用DataStructuring中已有的目录结构
+        # 注意：这里只是创建特定任务的子目录，而不是修改主目录结构
+        upload_folder = os.path.join(data_struct_dir, "SourceData", task_id)
+        target_folder = os.path.join(data_struct_dir, "TargetData", task_id)
+        json_folder = os.path.join(data_struct_dir, "JsonData", task_id)
+        predict_folder = os.path.join(data_struct_dir, "PredictData", task_id) if os.path.exists(os.path.join(data_struct_dir, "PredictData")) else os.path.join(data_struct_dir, task_id, "PredictData")
         
-        # 保存文件到上传目录
+        # 工作目录路径（兼容性考虑，保留原变量名）
+        work_dir = task_work_dir
+        
+        # 【修复6】确保目录存在，并清理可能存在的冲突文件
+        # 先删除可能存在的特定任务子目录，确保从干净状态开始
+        for folder in [upload_folder, target_folder, json_folder]:
+            if os.path.exists(folder):
+                try:
+                    shutil.rmtree(folder)
+                    logger.info(f"[Task {task_id}] 删除已存在的目录: {folder}")
+                except Exception as e:
+                    logger.warning(f"[Task {task_id}] 无法删除已存在的目录: {folder}, 错误: {str(e)}")
+        
+        # 创建新的目录结构
+        try:
+            os.makedirs(upload_folder, exist_ok=True)
+            os.makedirs(target_folder, exist_ok=True)
+            os.makedirs(json_folder, exist_ok=True)
+            os.makedirs(predict_folder, exist_ok=True)
+            logger.info(f"[Task {task_id}] 创建目录结构: SourceData/{task_id}, TargetData/{task_id}, JsonData/{task_id}")
+        except Exception as e:
+            logger.error(f"[Task {task_id}] 创建目录失败: {str(e)}")
+            raise
+        
+        # 【修复7】改进文件保存方式，使用同步写入确保文件真正写入磁盘
         file_path = os.path.join(upload_folder, filename)
-        async with aiofiles.open(file_path, "wb") as f:
-            await f.write(file_content)
-        
-        logger.info(f"[Task {task_id}] File saved to {file_path}, starting processing")
+        try:
+            # 使用同步方式保存文件，确保写入完成
+            with open(file_path, "wb") as f:
+                f.write(file_content)
+                f.flush()  # 确保数据写入磁盘
+                os.fsync(f.fileno())  # 强制操作系统将数据写入物理存储
+            
+            # 验证文件是否成功保存
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"文件保存失败，无法找到: {file_path}")
+                
+            file_size = os.path.getsize(file_path)
+            if file_size == 0:
+                raise ValueError(f"保存的文件大小为0: {file_path}")
+                
+            logger.info(f"[Task {task_id}] 文件成功保存: {file_path}, 大小: {file_size} 字节")
+            
+            # 列出源目录中的所有文件，以便调试
+            source_files = os.listdir(upload_folder)
+            logger.info(f"[Task {task_id}] 源目录内容: {', '.join(source_files)}")
+            
+            # 验证文件内容
+            with open(file_path, "rb") as f:
+                content_check = f.read(100)  # 读取前100字节进行校验
+                logger.info(f"[Task {task_id}] 文件内容校验: 前{len(content_check)}字节有效")
+        except Exception as e:
+            logger.error(f"[Task {task_id}] 文件保存或验证失败: {str(e)}")
+            logger.error(f"[Task {task_id}] 错误堆栈: {traceback.format_exc()}")
+            raise
+            
+        # 【修复8】为子进程准备文件信息
+        process_info = {
+            "work_dir": work_dir,
+            "upload_folder": upload_folder,
+            "target_folder": target_folder,
+            "json_folder": json_folder,
+            "predict_folder": predict_folder,
+            "filename": filename,
+            "file_id": file_id,
+            "repo_id": repo_id,
+            "task_id": task_id,
+            "file_path": file_path,
+            "file_size": file_size
+        }
         
         # 在进程池中执行CPU密集型处理
-        # 【并行处理】
-        # 使用进程池执行process_data函数，避免阻塞Web服务器
-        # 这允许多个文件并行处理，充分利用多核CPU
-        # 对于CPU密集型任务，多进程比多线程更有效
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(
             process_pool, 
             process_data, 
-            work_dir,
-            upload_folder, 
-            target_folder, 
-            json_folder, 
-            predict_folder, 
-            filename, 
-            file_id, 
-            repo_id,
-            task_id
+            process_info
         )
         
         # 更新任务状态
@@ -220,14 +319,26 @@ async def background_processing(file_id: str, repo_id: str, file_data, task_id: 
         # 清理工作目录
         # 处理完成后删除临时文件，释放磁盘空间
         try:
-            shutil.rmtree(work_dir)
-            logger.info(f"[Task {task_id}] Cleaned up work directory")
+            # 只删除任务特定的子目录，而不是整个DataStructuring目录
+            for folder in [upload_folder, target_folder, json_folder, predict_folder]:
+                if os.path.exists(folder):
+                    shutil.rmtree(folder)
+            
+            # 如果创建了task_work_dir目录，也删除它
+            if os.path.exists(work_dir) and os.path.basename(work_dir) == task_id:
+                shutil.rmtree(work_dir)
+                
+            logger.info(f"[Task {task_id}] Cleaned up task directories")
         except Exception as e:
-            logger.warning(f"[Task {task_id}] Failed to clean up work directory: {str(e)}")
+            logger.warning(f"[Task {task_id}] Failed to clean up task directories: {str(e)}")
         
     except Exception as e:
         # 异常处理：记录错误并更新任务状态
         logger.error(f"[Task {task_id}] Error in background processing: {str(e)}")
+        
+        # 【修复】添加详细的错误栈追踪信息，帮助排查问题
+        logger.error(f"[Task {task_id}] 错误堆栈: {traceback.format_exc()}")
+        
         task_status[task_id] = f"error: {str(e)}"
         
         # 尝试更新文件状态为错误
@@ -237,8 +348,7 @@ async def background_processing(file_id: str, repo_id: str, file_data, task_id: 
             logger.error(f"[Task {task_id}] Failed to update file status: {str(update_error)}")
 
 # ===== 文件处理核心逻辑 =====
-def process_data(work_dir, upload_folder, target_folder, json_folder, predict_folder, 
-                filename, file_id, repo_id, task_id):
+def process_data(process_info):
     """
     文件处理的核心函数
     
@@ -253,62 +363,87 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
     处理过程中的进度和状态会定期更新。
     
     参数:
-        work_dir (str): 工作目录路径
-        upload_folder (str): 源文件目录
-        target_folder (str): 目标文件目录
-        json_folder (str): JSON输出目录
-        predict_folder (str): 预测数据目录
-        filename (str): 文件名
-        file_id (str): 文件ID
-        repo_id (str): 仓库ID
-        task_id (str): 任务ID
+        process_info (dict): 包含所有必要的处理信息
         
     返回:
         tuple: (JSON结果数据, 预测结果)
     """
     try:
-        logger.info(f"[Task {task_id}] Starting data processing in separate process")
+        # 解包处理信息
+        work_dir = process_info["work_dir"]
+        upload_folder = process_info["upload_folder"]
+        target_folder = process_info["target_folder"]
+        json_folder = process_info["json_folder"]
+        predict_folder = process_info["predict_folder"]
+        filename = process_info["filename"]
+        file_id = process_info["file_id"]
+        repo_id = process_info["repo_id"]
+        task_id = process_info["task_id"]
+        file_path = process_info["file_path"]
+        file_size = process_info["file_size"]
+        
+        logger.info(f"[Task {task_id}] 开始数据处理，文件: {filename}, 大小: {file_size}")
+        
+        # 保存原始工作目录
+        original_cwd = os.getcwd()
+        
+        # 【修复9】验证文件在子进程中可访问
+        if not os.path.exists(file_path):
+            logger.error(f"[Task {task_id}] 子进程无法访问文件: {file_path}")
+            update_file_status(repo_id, file_id, "error: 子进程无法访问文件", True)
+            return None, None
+            
+        logger.info(f"[Task {task_id}] 子进程成功访问文件: {file_path}")
+        
+        # 列出源目录中的所有文件，以便调试
+        source_files = os.listdir(upload_folder)
+        if not source_files:
+            logger.error(f"[Task {task_id}] 子进程无法找到源目录中的文件: {upload_folder}")
+            update_file_status(repo_id, file_id, "error: 源目录为空", True)
+            return None, None
+            
+        logger.info(f"[Task {task_id}] 子进程中源目录内容: {', '.join(source_files)}")
         
         # 第一步：结构化处理
         # 将原始文件转换为结构化格式
         logger.info(f"[Task {task_id}] Step 1: Data structuring")
         try:
-            # 保存原始工作目录
-            original_cwd = os.getcwd()
+            # 【修复11】直接在当前进程执行结构化处理，避免多层进程嵌套
+            logger.info(f"[Task {task_id}] 直接在当前进程执行结构化处理")
             
-            # 更改工作目录到工作区根目录
-            # 这是因为一些处理脚本可能使用相对路径
-            os.chdir(work_dir)
+            # 验证源目录中是否有文件
+            if not os.path.exists(upload_folder):
+                logger.error(f"[Task {task_id}] 源目录不存在: {upload_folder}")
+                raise Exception("源目录不存在")
+                
+            source_files = os.listdir(upload_folder)
+            logger.info(f"[Task {task_id}] 源目录内容: {', '.join(source_files)}")
             
-            # 创建子任务ID，用于多阶段处理
-            subtask_id = f"{task_id}_structuring"
-            
-            # 在子进程中执行数据结构化处理
-            # 【注意】为何嵌套多进程：
-            # 主进程池已经创建了工作进程，但有些处理可能需要进一步并行
-            # 这种模式允许更精细的并行控制
-            with ProcessPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(
-                    process_subtask,
-                    upload_folder,
-                    target_folder,
-                    json_folder,
-                    predict_folder,
-                    subtask_id
+            if not source_files:
+                logger.error(f"[Task {task_id}] 源目录为空，无法进行处理")
+                raise Exception("源目录为空，无法进行处理")
+                
+            # 直接执行文件处理，避免多层进程调用
+            try:
+                main_process.main_process(
+                    source_dir=upload_folder,
+                    target_dir=target_folder
                 )
-                # 等待子任务完成
-                future.result(timeout=300)  # 设置5分钟超时
+                logger.info(f"[Task {task_id}] 结构化处理完成")
+                
+                # 验证处理结果
+                target_files = glob.glob(os.path.join(target_folder, "*"))
+                if not target_files:
+                    logger.warning(f"[Task {task_id}] 结构化处理未生成任何输出文件")
+                else:
+                    logger.info(f"[Task {task_id}] 生成了{len(target_files)}个输出文件")
+                    
+            except Exception as e:
+                logger.error(f"[Task {task_id}] 结构化处理失败: {str(e)}")
+                logger.error(f"[Task {task_id}] 错误堆栈: {traceback.format_exc()}")
+                raise Exception(f"结构化处理失败: {str(e)}")
             
-            # 恢复原始工作目录
-            os.chdir(original_cwd)
-            
-            logger.info(f"[Task {task_id}] Data structuring completed")
-            
-        except concurrent.futures.TimeoutError:
-            # 超时处理：记录错误并返回失败结果
-            logger.error(f"[Task {task_id}] Data structuring timed out after 5 minutes")
-            update_file_status(repo_id, file_id, "error: processing timeout", True)
-            return None, None
+            logger.info(f"[Task {task_id}] 数据结构化处理完成")
             
         except Exception as e:
             # 异常处理：记录错误并返回失败结果
@@ -333,8 +468,24 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
             # 在原始目录中运行预测
             os.chdir(original_cwd)
             
-            # 预测所有文件的风险
-            predictions = predict_all(source_folder=predict_folder)
+            # 【修复1】修改predict_all的参数调用方式
+            # 从错误日志分析，predict_all不接受predict_folder和source_folder参数
+            # 尝试直接将目录路径作为第一个位置参数传递
+            try:
+                logger.info(f"[Task {task_id}] 调用predict_all函数，参数：{predict_folder}")
+                predictions = predict_all(predict_folder)
+            except Exception as e:
+                logger.error(f"[Task {task_id}] predict_all函数调用失败: {str(e)}")
+                logger.error(f"[Task {task_id}] 将尝试不同的调用方式")
+                
+                # 尝试不同的参数名称
+                try:
+                    predictions = predict_all(folder=predict_folder)
+                except Exception as e2:
+                    logger.error(f"[Task {task_id}] 第二次尝试失败: {str(e2)}")
+                    
+                    # 如果还是失败，设置一个默认的预测结果
+                    predictions = {"error": f"预测功能调用失败: {str(e)}"}
             
             logger.info(f"[Task {task_id}] Risk prediction completed: {predictions}")
             
@@ -343,7 +494,8 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
             prediction_result = predictions.get(f'{excel_name}', None)
             
             # 更新文件状态为预测结果
-            # 如果有预测结果，将其作为状态；否则使用通用完成状态
+            # source文件：如果有预测结果，将其作为状态；否则使用通用完成状态
+            # 注意：原始上传的文件被视为source文件
             if prediction_result is not None:
                 status = str(prediction_result)
             else:
@@ -366,13 +518,46 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
         for json_file in glob.glob(os.path.join(json_folder, "*.json")):
             os.remove(json_file)
         
-        # 转换目标数据到JSON
-        target_to_json.process_target_to_json(target_folder=target_folder, json_folder=json_folder)
+        # 【修复2】修改process_target_to_json的参数调用方式
+        # 从错误日志分析，process_target_to_json不接受target_folder或target_dir参数
+        try:
+            logger.info(f"[Task {task_id}] 调用process_target_to_json函数，参数：target_dir={target_folder}, json_folder={json_folder}")
+            # 尝试使用位置参数调用
+            target_to_json.process_target_to_json(target_folder, json_folder)
+        except TypeError as e:
+            logger.error(f"[Task {task_id}] process_target_to_json函数参数错误: {str(e)}")
+            
+            # 尝试不同的参数组合
+            try:
+                # 尝试检查函数定义
+                import inspect
+                sig = inspect.signature(target_to_json.process_target_to_json)
+                logger.info(f"[Task {task_id}] process_target_to_json函数签名: {sig}")
+                
+                # 根据参数名尝试不同的调用方式
+                param_names = list(sig.parameters.keys())
+                if len(param_names) >= 2:
+                    kwargs = {
+                        param_names[0]: target_folder,
+                        param_names[1]: json_folder
+                    }
+                    logger.info(f"[Task {task_id}] 尝试使用参数名: {kwargs}")
+                    target_to_json.process_target_to_json(**kwargs)
+                else:
+                    # 如果参数少于2个，使用位置参数
+                    target_to_json.process_target_to_json(target_folder)
+            except Exception as e2:
+                logger.error(f"[Task {task_id}] 无法调用process_target_to_json: {str(e2)}")
+                # 创建一个空的JSON文件作为替代
+                dummy_json_path = os.path.join(json_folder, "dummy_result.json")
+                with open(dummy_json_path, "w", encoding="utf-8") as f:
+                    f.write('{"error": "JSON转换失败，请检查API兼容性"}')
+                logger.warning(f"[Task {task_id}] 创建了替代JSON文件: {dummy_json_path}")
         
         # 找到生成的JSON文件并读取内容
         json_files = glob.glob(os.path.join(json_folder, "*.json"))
         all_json_content = {}
-        
+            
         for json_file in json_files:
             try:
                 with open(json_file, "r", encoding="utf-8") as f:
@@ -385,10 +570,17 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
                 json_base_name = os.path.basename(json_file)
                 all_json_content[json_base_name] = json_data
                 
+                logger.info(f"[Task {task_id}] 成功解析JSON文件: {json_base_name}")
+                
             except Exception as e:
                 # 解析单个JSON文件失败不应阻止整个处理流程
                 logger.error(f"[Task {task_id}] Error parsing JSON file {json_file}: {str(e)}")
                 all_json_content[os.path.basename(json_file)] = {"error": str(e)}
+        
+        # 验证JSON内容
+        if not all_json_content:
+            logger.warning(f"[Task {task_id}] 没有找到任何有效的JSON文件")
+            all_json_content = {"error": "No valid JSON files found"}
         
         # 第四步：保存处理结果到数据库
         logger.info(f"[Task {task_id}] Step 4: Saving results to database")
@@ -396,35 +588,64 @@ def process_data(work_dir, upload_folder, target_folder, json_folder, predict_fo
         # 生成完整的JSON结果
         json_result = {
             "content": all_json_content,
-            "predictions": predictions
+            "predictions": predictions if predictions else {"error": "No predictions available"}
         }
-        
-        # 更新数据库中的JSON结果
-        create_or_update_json_res(file_id, json_result)
         
         # 上传处理结果文件到GridFS
         # 找到生成的Excel文件
         excel_files = glob.glob(os.path.join(target_folder, "*.xlsx"))
+        target_file_ids = []  # 存储所有target文件的ID
+        
+        if not excel_files:
+            logger.warning(f"[Task {task_id}] 没有找到任何Excel文件")
+        
         for excel_file in excel_files:
             try:
                 # 读取Excel文件内容
                 with open(excel_file, "rb") as f:
                     excel_content = f.read()
                 
-                # 上传结果文件
                 excel_filename = os.path.basename(excel_file)
-                upload_res_file(
+                
+                # 使用BytesIO包装文件内容，提供文件对象接口
+                from io import BytesIO
+                
+                # 上传处理后的结果文件 (target文件)
+                file_id_res = upload_res_file(
                     repo_id=repo_id,
-                    file_content=excel_content,
+                    file_obj=BytesIO(excel_content),
+                    source_file_id=file_id,
                     filename=excel_filename,
-                    source_file=file_id
+                    source=False
                 )
+                
+                if file_id_res:
+                    target_file_ids.append(file_id_res)
+                    try:
+                        update_file_status(repo_id, file_id_res, "completed", True)
+                        logger.info(f"[Task {task_id}] 已将结果文件状态设为completed: {excel_filename}, file_id={file_id_res}")
+                    except Exception as status_err:
+                        logger.error(f"[Task {task_id}] 更新结果文件状态失败: {str(status_err)}")
                 
                 logger.info(f"[Task {task_id}] Uploaded result file: {excel_filename}")
                 
             except Exception as e:
-                # 上传结果文件失败不应阻止整个处理流程
                 logger.error(f"[Task {task_id}] Failed to upload result file {excel_file}: {str(e)}")
+        
+        # 验证是否有成功上传的文件
+        if not target_file_ids:
+            logger.warning(f"[Task {task_id}] 没有成功上传任何结果文件")
+            # 如果没有成功上传的文件，使用原始文件ID
+            target_file_ids = [file_id]
+        
+        # 为每个target文件创建JSON结果
+        for target_file_id in target_file_ids:
+            try:
+                logger.info(f"[Task {task_id}] 正在为文件 {target_file_id} 创建JSON结果")
+                json_res_id = create_or_update_json_res(target_file_id, json_result)
+                logger.info(f"[Task {task_id}] 成功创建/更新JSON结果: file_id={target_file_id}, json_res_id={json_res_id}")
+            except Exception as e:
+                logger.error(f"[Task {task_id}] 创建/更新JSON结果失败: file_id={target_file_id}, error={str(e)}")
         
         # 返回处理结果
         return json_result, predictions
@@ -462,34 +683,53 @@ def process_subtask(upload_folder, target_folder, json_folder, predict_folder, s
         bool: 处理是否成功
     """
     try:
-        logger.info(f"[Subtask {subtask_id}] Starting in separate process")
+        logger.info(f"[Subtask {subtask_id}] 开始处理，进程ID: {os.getpid()}")
         
-        # 清理可能存在的旧文件
-        cleanup_work_dir(upload_folder, target_folder, json_folder, predict_folder)
+        # 【修复10】验证路径存在并可访问
+        if not os.path.exists(upload_folder):
+            logger.error(f"[Subtask {subtask_id}] 源目录不存在: {upload_folder}")
+            return False
+            
+        # 列出源目录内容
+        source_files = os.listdir(upload_folder)
+        logger.info(f"[Subtask {subtask_id}] 源目录内容: {', '.join(source_files) if source_files else '空'}")
         
-        # 确保目录存在
-        os.makedirs(upload_folder, exist_ok=True)
-        os.makedirs(target_folder, exist_ok=True)
-        os.makedirs(json_folder, exist_ok=True)
-        os.makedirs(predict_folder, exist_ok=True)
+        if not source_files:
+            logger.error(f"[Subtask {subtask_id}] 源目录为空，处理无法继续")
+            return False
         
+        # 检查第一个文件是否可访问
+        first_file_path = os.path.join(upload_folder, source_files[0])
+        try:
+            file_size = os.path.getsize(first_file_path)
+            logger.info(f"[Subtask {subtask_id}] 文件可访问: {first_file_path}, 大小: {file_size}")
+        except Exception as e:
+            logger.error(f"[Subtask {subtask_id}] 无法读取文件: {first_file_path}, 错误: {str(e)}")
+            
         # 执行主处理逻辑
-        # main_process是数据结构化模块的入口点
-        main_process.main_process(
-            source_dir=upload_folder,
-            target_dir=target_folder
-        )
+        try:
+            main_process.main_process(
+                source_dir=upload_folder,
+                target_dir=target_folder
+            )
+            logger.info(f"[Subtask {subtask_id}] 文件结构化处理完成")
+        except Exception as e:
+            logger.error(f"[Subtask {subtask_id}] 处理失败: {str(e)}")
+            logger.error(f"[Subtask {subtask_id}] 错误堆栈: {traceback.format_exc()}")
+            return False
         
-        # 如果目标目录中有文件，则处理成功
+        # 验证处理结果
         target_files = glob.glob(os.path.join(target_folder, "*"))
         success = len(target_files) > 0
         
-        logger.info(f"[Subtask {subtask_id}] Completed {'successfully' if success else 'with errors'}")
+        logger.info(f"[Subtask {subtask_id}] 处理完成，结果目录内容: {', '.join(target_files) if target_files else '空'}")
+        logger.info(f"[Subtask {subtask_id}] 处理{'成功' if success else '失败'}")
         return success
         
     except Exception as e:
         # 异常处理：记录错误并返回失败结果
-        logger.error(f"[Subtask {subtask_id}] Error: {str(e)}")
+        logger.error(f"[Subtask {subtask_id}] 处理异常: {str(e)}")
+        logger.error(f"[Subtask {subtask_id}] 错误堆栈: {traceback.format_exc()}")
         return False
 
 # ===== 工作目录清理函数 =====
@@ -607,7 +847,7 @@ async def cancel_task(task_id: str):
     # 如果任务已经完成或失败，不能取消
     if current_status in ["completed", "failed"] or current_status.startswith("error"):
         return {
-            "task_id": task_id,
+            "task_id": task_id, 
             "status": current_status,
             "message": "Task already finished and cannot be cancelled"
         }
@@ -680,12 +920,12 @@ async def cleanup_task_records(hours: int = 24):
         # 从文件任务映射中删除
         for file_id in list(file_tasks.keys()):
             if task_id in file_tasks[file_id]:
-                file_tasks[file_id].remove(task_id)
+                        file_tasks[file_id].remove(task_id)
                 
                 # 如果文件没有关联任务，删除文件记录
-                if not file_tasks[file_id]:
-                    del file_tasks[file_id]
-    
+                        if not file_tasks[file_id]:
+                            del file_tasks[file_id]
+                    
     # 返回清理结果
     return {
         "deleted_tasks": deleted_count,

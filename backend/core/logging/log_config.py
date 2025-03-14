@@ -30,7 +30,7 @@ from loguru import logger
 import structlog
 from rich.console import Console
 from rich.logging import RichHandler
-from python_json_logger import JsonLogger
+from pythonjsonlogger import jsonlogger
 
 # 项目根目录
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -83,18 +83,20 @@ def configure_structlog():
 class LoguruHandler(logging.Handler):
     """将标准logging日志转发到loguru"""
     def emit(self, record):
+        # 过滤掉MongoDB的心跳日志
+        if record.name.startswith('pymongo') and 'heartbeat' in record.getMessage().lower():
+            return
+            
         # 从记录中提取trace_id，如果没有则使用默认值
         trace_id = getattr(record, 'trace_id', TRACE_ID)
         
         # 根据日志级别调用相应的loguru方法
         level = logger.level(record.levelname).name
         
-        # 准备额外的上下文信息
+        # 简化额外的上下文信息
         extras = {
             "trace_id": trace_id,
-            "logger_name": record.name,
-            "path": record.pathname,
-            "line": record.lineno
+            "logger_name": record.name
         }
         
         # 构造消息并添加异常信息
@@ -112,6 +114,10 @@ def setup_standard_logging():
     
     # 默认级别设为DEBUG，让loguru决定是否记录
     logging.root.setLevel(logging.DEBUG)
+    
+    # 设置MongoDB驱动的日志级别为WARNING，减少心跳日志
+    logging.getLogger("pymongo").setLevel(logging.WARNING)
+    logging.getLogger("motor").setLevel(logging.WARNING)
 
 def configure_logging(level="INFO", enable_json=False):
     """
@@ -129,27 +135,32 @@ def configure_logging(level="INFO", enable_json=False):
     # 移除所有默认处理器
     logger.remove()
     
-    # 添加控制台处理器，使用Rich美化
-    log_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> | <yellow>trace_id={extra[trace_id]}</yellow> | <level>{message}</level>"
+    # 使用无格式字符串，让Rich处理器负责所有格式化
+    # 这样可以避免ANSI转义序列显示问题
+    console_format = "{message}"
     
+    # 配置Rich处理器
     logger.add(
-        rich_handler,
-        format=log_format,
+        sys.stderr,  # 直接使用stderr而不是rich_handler
+        format=console_format,
         level=level,
         colorize=True
     )
     
-    # 添加文件处理器 - 主日志文件
-    file_format = "{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{line} | trace_id={extra[trace_id]} | {message}"
-    json_format = lambda record: json.dumps({
-        "timestamp": record["time"].strftime("%Y-%m-%d %H:%M:%S"),
-        "level": record["level"].name,
-        "message": record["message"],
-        "name": record["name"],
-        "line": record["line"],
-        "trace_id": record["extra"].get("trace_id", DEFAULT_TRACE_ID),
-        "exception": record["exception"]
-    })
+    # 添加文件处理器 - 使用更简洁的格式
+    file_format = "{time:YYYY-MM-DD HH:mm:ss} | {level: <7} | {name} | {message}"
+    
+    # 为生产环境定义JSON格式
+    if enable_json:
+        json_format = lambda record: json.dumps({
+            "timestamp": record["time"].strftime("%Y-%m-%d %H:%M:%S"),
+            "level": record["level"].name,
+            "message": record["message"],
+            "name": record["name"],
+            "trace_id": record["extra"].get("trace_id", DEFAULT_TRACE_ID)
+        })
+    else:
+        json_format = None
     
     logger.add(
         DEFAULT_LOG_FILE,
@@ -158,7 +169,8 @@ def configure_logging(level="INFO", enable_json=False):
         retention="30 days",  # 保留30天
         compression="zip",   # 压缩旧日志
         level=level,
-        enqueue=True  # 异步写入
+        enqueue=True,  # 异步写入
+        serialize=enable_json  # 使用JSON序列化，如果启用了JSON格式
     )
     
     # 添加错误日志文件 - 仅ERROR和CRITICAL级别
@@ -169,10 +181,11 @@ def configure_logging(level="INFO", enable_json=False):
         retention=10,  # 保留10个备份
         compression="zip",
         level="ERROR",
-        enqueue=True
+        enqueue=True,
+        serialize=enable_json
     )
     
-    # 添加访问日志文件 - 通过过滤器区分
+    # 添加访问日志文件
     logger.add(
         ACCESS_LOG_FILE,
         format=json_format if enable_json else file_format,
@@ -181,7 +194,8 @@ def configure_logging(level="INFO", enable_json=False):
         compression="zip",
         filter=lambda record: record["extra"].get("logger_type") == "access",
         level="INFO",
-        enqueue=True
+        enqueue=True,
+        serialize=enable_json
     )
     
     # 配置structlog

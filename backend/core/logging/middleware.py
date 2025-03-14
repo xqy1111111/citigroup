@@ -78,7 +78,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             # 记录异常并返回500响应
             process_time = time.time() - start_time
             logger.exception(
-                f"请求处理异常: {str(e)}", 
+                "请求处理异常: {}", 
+                str(e),
                 trace_id=trace_id, 
                 logger_type="access",
                 url=str(request.url),
@@ -133,7 +134,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 
         # 构建请求日志信息
         log_data = {
-            "event": "http_request",
+            # 移除"event"键，避免与structlog默认行为冲突
             "method": request.method,
             "url": str(request.url),
             "client_ip": client_host,
@@ -143,7 +144,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         
         # 使用loguru记录请求日志
         logger.info(
-            f"收到请求: {json.dumps(log_data)}", 
+            "收到请求: {}",
+            json.dumps({"event": "http_request", **log_data}),
             trace_id=trace_id, 
             logger_type="access"
         )
@@ -167,7 +169,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         """
         # 构建响应日志信息
         log_data = {
-            "event": "http_response",
+            # 移除"event"键，避免与structlog默认行为冲突
             "method": request.method,
             "url": str(request.url),
             "status_code": response.status_code,
@@ -179,7 +181,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         if 200 <= response.status_code < 400:
             # 成功响应
             logger.info(
-                f"请求成功: {json.dumps(log_data)}", 
+                "请求成功: {}", 
+                json.dumps({"event": "http_response", **log_data}),
                 trace_id=trace_id, 
                 logger_type="access"
             )
@@ -187,7 +190,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         elif 400 <= response.status_code < 500:
             # 客户端错误
             logger.warning(
-                f"客户端错误: {json.dumps(log_data)}", 
+                "客户端错误: {}", 
+                json.dumps({"event": "http_response", **log_data}),
                 trace_id=trace_id, 
                 logger_type="access"
             )
@@ -195,7 +199,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         else:
             # 服务器错误
             logger.error(
-                f"服务器错误: {json.dumps(log_data)}", 
+                "服务器错误: {}", 
+                json.dumps({"event": "http_response", **log_data}),
                 trace_id=trace_id, 
                 logger_type="access"
             )
@@ -227,7 +232,8 @@ class CorrelationIDMiddleware(BaseHTTPMiddleware):
         
         # 使用loguru记录调试信息
         logger.debug(
-            f"关联ID: {correlation_id}", 
+            "关联ID: {}", 
+            correlation_id,
             correlation_id=correlation_id, 
             logger_type="access"
         )

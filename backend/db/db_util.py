@@ -540,7 +540,6 @@ def create_or_update_json_res(file_id: str, json_content):
     result = db.json_res.insert_one(file_json)
     return str(result.inserted_id)
 
-
 def get_json_res(file_id: str):
     """
     返回json格式的结果
@@ -553,6 +552,5 @@ def get_json_res(file_id: str):
         json_res["_id"] = str(json_res["_id"])  # 转换 ObjectId 为字符串
         return json_res  # 直接返回已有的 chat 记录
     return None
-
 
 

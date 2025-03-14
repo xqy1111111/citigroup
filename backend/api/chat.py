@@ -326,7 +326,20 @@ async def chat_with_file_id(user_id: str, repo_id: str, file_id: str, message: s
     create_or_get_chat_history(user_id, repo_id)
     
     # 使用actual_file_id获取JSON内容
-    json_res = get_json_res(actual_file_id)
+    # 注意：由于get_json_res函数现在期望接收结果文件ID而不是源文件ID，
+    # 这里需要先获取结果文件ID，再调用get_json_res
+    file_metadata = get_file_metadata_by_id(repo_id, actual_file_id, True)
+    if file_metadata and "results" in file_metadata:
+        # 如果有结果文件，使用第一个结果文件的ID
+        if file_metadata["results"] and len(file_metadata["results"]) > 0:
+            result_file_id = str(file_metadata["results"][0]["file_id"])
+            json_res = get_json_res(result_file_id)
+        else:
+            # 文件没有处理结果
+            json_res = None
+    else:
+        # 尝试以actual_file_id作为结果文件ID直接获取
+        json_res = get_json_res(actual_file_id)
     
     store_message = Message(sayer="user", text=message, timestamp=datetime.now())
     
