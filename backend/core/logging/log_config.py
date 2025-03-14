@@ -6,7 +6,7 @@
 2. 文件日志输出 - 用于持久化存储日志记录
 3. 日志轮转功能 - 自动管理日志文件大小和数量
 4. 不同级别的日志处理 - 区分不同严重程度的信息
-5. 结构化日志 - 支持JSON格式，便于分析和处理
+5. 结构化日志 - 支持简洁的文本格式，便于阅读和分析
 
 日志级别说明：
 - DEBUG: 详细的调试信息，用于开发和调试
@@ -70,7 +70,7 @@ def configure_structlog():
             structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S"),
             add_trace_id_to_record,
             structlog.processors.format_exc_info,
-            structlog.processors.JSONRenderer()
+            structlog.dev.ConsoleRenderer(colors=True)
         ],
         context_class=dict,
         logger_factory=structlog.stdlib.LoggerFactory(),
@@ -150,52 +150,47 @@ def configure_logging(level="INFO", enable_json=False):
     # 添加文件处理器 - 使用更简洁的格式
     file_format = "{time:YYYY-MM-DD HH:mm:ss} | {level: <7} | {name} | {message}"
     
-    # 为生产环境定义JSON格式
+    # 已修改：简化JSON格式化，更多使用文本格式
     if enable_json:
-        json_format = lambda record: json.dumps({
-            "timestamp": record["time"].strftime("%Y-%m-%d %H:%M:%S"),
-            "level": record["level"].name,
-            "message": record["message"],
-            "name": record["name"],
-            "trace_id": record["extra"].get("trace_id", DEFAULT_TRACE_ID)
-        })
+        # 已修改：保留JSON格式但简化结构
+        text_format = lambda record: f"{record['time'].strftime('%Y-%m-%d %H:%M:%S')} | {record['level'].name:<7} | {record['name']} | trace_id:{record['extra'].get('trace_id', DEFAULT_TRACE_ID)} | {record['message']}"
     else:
-        json_format = None
+        text_format = None
     
     logger.add(
         DEFAULT_LOG_FILE,
-        format=json_format if enable_json else file_format,
+        format=text_format if enable_json else file_format,  # 已修改：即使enable_json为True也使用文本格式
         rotation="00:00",  # 每天午夜轮转
         retention="30 days",  # 保留30天
         compression="zip",   # 压缩旧日志
         level=level,
         enqueue=True,  # 异步写入
-        serialize=enable_json  # 使用JSON序列化，如果启用了JSON格式
+        serialize=False  # 已修改：禁用JSON序列化
     )
     
     # 添加错误日志文件 - 仅ERROR和CRITICAL级别
     logger.add(
         ERROR_LOG_FILE,
-        format=json_format if enable_json else file_format,
+        format=text_format if enable_json else file_format,  # 已修改：统一使用文本格式
         rotation="10 MB",  # 每10MB轮转
         retention=10,  # 保留10个备份
         compression="zip",
         level="ERROR",
         enqueue=True,
-        serialize=enable_json
+        serialize=False  # 已修改：禁用JSON序列化
     )
     
     # 添加访问日志文件
     logger.add(
         ACCESS_LOG_FILE,
-        format=json_format if enable_json else file_format,
+        format=text_format if enable_json else file_format,  # 已修改：统一使用文本格式
         rotation="00:00",  # 每天午夜轮转
         retention="30 days",
         compression="zip",
         filter=lambda record: record["extra"].get("logger_type") == "access",
         level="INFO",
         enqueue=True,
-        serialize=enable_json
+        serialize=False  # 已修改：禁用JSON序列化
     )
     
     # 配置structlog
@@ -237,24 +232,23 @@ class TraceIDFilter:
 
 class JsonFormatter:
     """
-    兼容原有JsonFormatter的API
+    兼容原有JsonFormatter的API，但使用文本格式替代JSON
     """
+    # 已修改：完全重写这个类，使用简单的文本格式而不是JSON
     def format(self, record):
-        log_record = {
-            "timestamp": self.formatTime(record) if hasattr(self, 'formatTime') else record.created,
-            "level": record.levelname,
-            "message": record.getMessage(),
-            "logger_name": record.name,
-            "path": record.pathname,
-            "line": record.lineno,
-            "trace_id": getattr(record, 'trace_id', DEFAULT_TRACE_ID)
-        }
+        # 已修改：使用简单的文本格式记录，而不是JSON对象
+        timestamp = self.formatTime(record) if hasattr(self, 'formatTime') else record.created
+        trace_id = getattr(record, 'trace_id', DEFAULT_TRACE_ID)
+        
+        # 构建简单的文本格式日志
+        log_message = f"{timestamp} | {record.levelname:<7} | {record.name} | trace_id:{trace_id} | {record.getMessage()}"
         
         # 添加异常信息（如果有）
         if record.exc_info:
-            log_record["exception"] = self.formatException(record.exc_info) if hasattr(self, 'formatException') else str(record.exc_info)
+            exception_text = self.formatException(record.exc_info) if hasattr(self, 'formatException') else str(record.exc_info)
+            log_message += f"\nException: {exception_text}"
             
-        return json.dumps(log_record)
+        return log_message
 
 if __name__ == "__main__":
     # 测试日志配置
