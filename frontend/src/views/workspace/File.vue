@@ -44,7 +44,7 @@ function downloadResult() {
       </template>
 
       <el-descriptions title="Overview" border>
-        <el-descriptions-item label="Name">
+        <el-descriptions-item label="ID">
           {{ currentFile.file_id }}
         </el-descriptions-item>
         <el-descriptions-item label="Size">

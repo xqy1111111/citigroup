@@ -10,11 +10,12 @@ import { addRepo as addRepoApi, getRepo, updateRepoName, updateRepoDesc, deleteR
 import { ElMessageBox, ElMessage } from 'element-plus';
 import 'element-plus/theme-chalk/el-message-box.css'
 import { checkAuth } from '../../utils/directives';
+import { getUser } from '../../api/user';
 
 const userStore = useUserStore();
 const currentRepoStore = useCurrentRepoStore();
 
-const repos = ref([] as repo[]);//暂存的Repo数据
+const repos = ref([] as (repo & { owner_name?: string })[]);//暂存的Repo数据
 
 const searchInput = ref('');
 const repoAdderVisible = ref(false);
@@ -44,10 +45,20 @@ onMounted(() => {
   }
   
   for (let repoId of userStore.repos) {
-    getRepo(repoId).then(response => {
+    getRepo(repoId).then(async response => {
       if (response.status === 200) {
-        console.log(response);
-        repos.value.push(response.data);
+        const repoData = response.data;
+        try {
+          // 获取 owner 的用户信息
+          const ownerResponse = await getUser(repoData.owner_id);
+          if (ownerResponse.status === 200) {
+            repoData.owner_name = ownerResponse.data.username;
+          }
+        } catch (error) {
+          console.error('Failed to fetch owner info:', error);
+          repoData.owner_name = repoData.owner_id; // 如果获取失败，使用 ID 作为后备
+        }
+        repos.value.push(repoData);
       }
     }).catch(error => {
       console.log(error);
@@ -177,7 +188,7 @@ const selectRepo = (repo: repo) => {
                 <el-icon v-else size="small">
                   <Avatar />
                 </el-icon>
-                <el-tag type="primary">{{ scope.row.owner_id }}</el-tag>
+                <el-tag type="primary">{{ scope.row.owner_name || scope.row.owner_id }}</el-tag>
               </el-space>
             </template>
           </el-table-column>

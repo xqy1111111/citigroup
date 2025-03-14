@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Files, Folder, Document, DocumentChecked, Collection } from '@element-plus/icons-vue';
 import { useCurrentRepoStore, useCurrentFileStore,useUserStore } from '../utils/state';
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref } from 'vue';
 import {getRepo} from "../api/repo.ts";
 import {router} from "../router";
 import { ElMessage } from 'element-plus';
@@ -11,9 +11,26 @@ const currentRepoStore = useCurrentRepoStore();
 const currentFileStore = useCurrentFileStore();
 const userStore = useUserStore();
 
+const otherRepos = computed(() => {
+  return userStore.repos.filter(repoId => repoId !== currentRepoStore.id);
+});
+
+const repoNames = ref<{[key: string]: string}>({});
+
 onMounted(() => {
   currentRepoStore.localStorageCurrentRepoData();
   currentFileStore.localStorageCurrentFileInfo();
+  
+  // 获取所有仓库的名称
+  otherRepos.value.forEach(repoId => {
+    getRepo(repoId).then(response => {
+      if (response.status === 200) {
+        repoNames.value[repoId] = response.data.name;
+      }
+    }).catch(error => {
+      console.log(error);
+    });
+  });
 });
 
 const handleFileSelect = (fileId: string) => {
@@ -31,10 +48,6 @@ const handleFileSelect = (fileId: string) => {
     currentFileStore.setCurrentFileInfo(selectedFile);
   }
 };
-
-const otherRepos = computed(() => {
-  return userStore.repos.filter(repoId => repoId !== currentRepoStore.id);
-});
 
 const naviToRepo = (id: string) => {
   if (!checkAuth()) {
@@ -93,7 +106,7 @@ const naviToRepo = (id: string) => {
             @click="naviToRepo(repoId)"
         >
           <el-icon><Folder /></el-icon>
-          {{ repoId}}
+          {{ repoNames[repoId] || repoId }}
         </el-menu-item>
       </el-sub-menu>
     </el-menu>
