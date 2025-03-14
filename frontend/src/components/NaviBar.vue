@@ -5,6 +5,8 @@ import {useUserStore,useCurrentRepoStore} from "../utils/state.ts";
 import {ElMessage, ElMessageBox} from "element-plus";
 import 'element-plus/theme-chalk/el-message.css'
 import 'element-plus/theme-chalk/el-message-box.css'
+import { checkAuth } from '../utils/directives';
+
 const userStore = useUserStore();
 
 const router = useRouter();
@@ -14,9 +16,16 @@ const handleSelect = (key: string) => {
       router.push('/dashboard');
       break;
     case 'workspace':
-      // 检查是否有当前仓库
-      // const currentRepo = JSON.parse(sessionStorage.getItem('currentRepo') || '{}');
-        const currentRepo = useCurrentRepoStore();
+      if (!checkAuth()) {
+        ElMessage.warning('请先登录后再访问此页面');
+        router.push({
+          path: '/login',
+          query: { redirect: '/workspace' }
+        });
+        return;
+      }
+      
+      const currentRepo = useCurrentRepoStore();
       if (!currentRepo.id) {
         ElMessage.warning('Please select a repository first');
         return;
@@ -24,12 +33,25 @@ const handleSelect = (key: string) => {
       router.push('/workspace');
       break;
     case 'chat':
+      if (!checkAuth()) {
+        ElMessage.warning('请先登录后再访问此页面');
+        router.push({
+          path: '/login',
+          query: { redirect: '/chat' }
+        });
+        return;
+      }
       router.push('/chat');
       break;
   }
 };
 
 const handleLogout = () => {
+  if (!checkAuth()) {
+    router.push('/login');
+    return;
+  }
+  
   ElMessageBox.confirm(
     'Quit ?',
     'Warning',
@@ -39,11 +61,9 @@ const handleLogout = () => {
       type: 'warning',
     }
   ).then(() => {
-
     userStore.clearUserInfo();
     console.log(userStore.isLoggedIn)
     router.push('/login');
-
   });
 };
 

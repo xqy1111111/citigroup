@@ -9,6 +9,7 @@ import 'element-plus/theme-chalk/el-message.css'
 import 'element-plus/theme-chalk/el-message-box.css'
 import { downloadFile, uploadFile, type file, deleteFile, getFileMetadata, getFileJsonResult } from '../../api/file';
 import { processFile } from '../../api/process';
+import { checkAuth } from '../../utils/directives';
 
 const userStore = useUserStore();
 const currentRepo = useCurrentRepoStore();
@@ -31,6 +32,21 @@ const uploadFiles = ref<UploadFile[]>([]);
 onMounted(() => {
   userStore.localStorageUserData();
   currentRepo.localStorageCurrentRepoData();
+  
+  if (!checkAuth()) {
+    ElMessage.warning('请先登录后再访问此页面');
+    router.push({
+      path: '/login',
+      query: { redirect: router.currentRoute.value.fullPath }
+    });
+    return;
+  }
+  
+  if (!currentRepo.id) {
+    ElMessage.warning('Please select a repository first');
+    router.push('/dashboard');
+    return;
+  }
 });
 
 function openRepoEditor() {

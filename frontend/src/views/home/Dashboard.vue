@@ -7,8 +7,9 @@ import { router } from '../../router';
 import { useUserStore } from '../../utils/state';
 import { useCurrentRepoStore } from '../../utils/state';
 import { addRepo as addRepoApi, getRepo, updateRepoName, updateRepoDesc, deleteRepo as deleteRepoApi } from '../../api/repo';
-import { ElMessageBox } from 'element-plus';
+import { ElMessageBox, ElMessage } from 'element-plus';
 import 'element-plus/theme-chalk/el-message-box.css'
+import { checkAuth } from '../../utils/directives';
 
 const userStore = useUserStore();
 const currentRepoStore = useCurrentRepoStore();
@@ -32,7 +33,17 @@ const repoEditorForm = reactive({
 onMounted(() => {
   userStore.localStorageUserData();
   currentRepoStore.localStorageCurrentRepoData();
-  for (let repoId of userStore.repos) { //从后端读取Repo数据
+  
+  if (!checkAuth()) {
+    ElMessage.warning('请先登录后再访问此页面');
+    router.push({
+      path: '/login',
+      query: { redirect: '/dashboard' }
+    });
+    return;
+  }
+  
+  for (let repoId of userStore.repos) {
     getRepo(repoId).then(response => {
       if (response.status === 200) {
         console.log(response);
@@ -75,8 +86,8 @@ function addRepo() {
 
 function editRepo() {
   const repo = repos.value.find(repo => repo.id === repoEditorForm.id);
-  if (repo) { //找到Repo
-    if (repoEditorForm.name !== repo.name) { //判断是否要改名字
+  if (repo) {
+    if (repoEditorForm.name !== repo.name) {
       updateRepoName(repoEditorForm.id, {
         new_name: repoEditorForm.name,
         new_desc: repoEditorForm.desc,
@@ -84,7 +95,7 @@ function editRepo() {
         console.log(error);
       });
     }
-    if (repoEditorForm.desc !== repo.desc) {//判断是否要改描述
+    if (repoEditorForm.desc !== repo.desc) {
       updateRepoDesc(repoEditorForm.id, {
         new_name: repoEditorForm.name,
         new_desc: repoEditorForm.desc,
@@ -124,20 +135,19 @@ function deleteRepo(id: string) {
   });
 }
 
-function naviToRepo(id: string) {
-  const repo = repos.value.find(repo => repo.id === id);
-  if (repo) {
-    getRepo(repo.id).then(response => {
-      if (response.status === 200) {
-        console.log(response);
-        currentRepoStore.setCurrentRepoInfo(response.data);
-        router.push({ path: '/repo' });
-      }
-    }).catch(error => {
-      console.log(error);
+const selectRepo = (repo: repo) => {
+  if (!checkAuth()) {
+    ElMessage.warning('请先登录后再访问此页面');
+    router.push({
+      path: '/login',
+      query: { redirect: '/repo' }
     });
+    return;
   }
-}
+  
+  currentRepoStore.setCurrentRepoInfo(repo);
+  router.push('/repo');
+};
 </script>
 
 <template>
@@ -157,7 +167,7 @@ function naviToRepo(id: string) {
         <el-table :data="repos" style="width: 100%" max-height="500">
           <el-table-column prop="name" label="Repository" width="180" sortable show-overflow-tooltip>
             <template #default="scope">
-              <el-button type="primary" link @click.prevent="naviToRepo(scope.row.id)">{{ scope.row.name }}</el-button>
+              <el-button type="primary" link @click.prevent="selectRepo(scope.row)">{{ scope.row.name }}</el-button>
             </template>
           </el-table-column>
           <el-table-column prop="owner_id" label="Owner" width="180" sortable>

@@ -4,6 +4,8 @@ import { useCurrentRepoStore, useCurrentFileStore,useUserStore } from '../utils/
 import { onMounted, computed } from 'vue';
 import {getRepo} from "../api/repo.ts";
 import {router} from "../router";
+import { ElMessage } from 'element-plus';
+import { checkAuth } from '../utils/directives';
 
 const currentRepoStore = useCurrentRepoStore();
 const currentFileStore = useCurrentFileStore();
@@ -12,21 +14,38 @@ const userStore = useUserStore();
 onMounted(() => {
   currentRepoStore.localStorageCurrentRepoData();
   currentFileStore.localStorageCurrentFileInfo();
-
 });
 
-
 const handleFileSelect = (fileId: string) => {
+  if (!checkAuth()) {
+    ElMessage.warning('请先登录后再访问此页面');
+    router.push({
+      path: '/login',
+      query: { redirect: router.currentRoute.value.fullPath }
+    });
+    return;
+  }
+  
   const selectedFile = currentRepoStore.files.find(file => file.file_id === fileId);
   if (selectedFile) {
     currentFileStore.setCurrentFileInfo(selectedFile);
   }
 };
-// 计算其他仓库（不包括当前仓库）
+
 const otherRepos = computed(() => {
   return userStore.repos.filter(repoId => repoId !== currentRepoStore.id);
 });
+
 const naviToRepo = (id: string) => {
+  if (!checkAuth()) {
+    ElMessage.warning('请先登录后再访问此页面');
+    router.push({
+      path: '/login',
+      query: { redirect: '/repo' }
+    });
+    return;
+  }
+  
   getRepo(id).then(response => {
     if (response.status === 200) {
       console.log(response);
@@ -48,7 +67,6 @@ const naviToRepo = (id: string) => {
           <el-icon><Files /></el-icon>
           <span>File</span>
         </template>
-        <!-- 只在有当前仓库时显示文件列表 -->
         <template v-if="currentRepoStore.id">
           <el-menu-item
               v-for="file in currentRepoStore.files"
@@ -68,7 +86,6 @@ const naviToRepo = (id: string) => {
           <el-icon><Collection /></el-icon>
           <span>History</span>
         </template>
-        <!-- 显示用户的其他仓库 -->
         <el-menu-item
             v-for="repoId in otherRepos"
             :key="repoId"

@@ -4,6 +4,10 @@ import type { repo, result } from '../api/repo';
 import type { userData } from '../api/user';
 import type { chat, chatHistory } from '../api/chat';
 
+/**
+ * 用户状态管理
+ * [已修改] 使用sessionStorage替代localStorage，确保每个标签页状态独立
+ */
 export const useUserStore = defineStore('user', {
     state: () => ({
         id: '',
@@ -12,11 +16,16 @@ export const useUserStore = defineStore('user', {
         profile_picture: '',
         repos: [] as string[],
         collaborations: [] as string[],
-        isLoggedIn: false
+        isLoggedIn: false,
+        token: '',
+        refreshToken: ''
     }),
 
     actions: {
-        // 设置用户信息
+        /**
+         * 设置用户信息
+         * @param info 用户数据
+         */
         setUserInfo(info: userData) {
             this.$patch({
                 id: info.id,
@@ -27,10 +36,58 @@ export const useUserStore = defineStore('user', {
                 collaborations: info.collaborations,
                 isLoggedIn: true
             });
+            // 使用sessionStorage存储用户数据，提高安全性
             sessionStorage.setItem('user', JSON.stringify(info))
         },
 
-        // 清除用户信息
+        /**
+         * 设置访问令牌
+         * [已修改] 使用sessionStorage而非localStorage，确保每个标签页状态独立
+         * @param token JWT访问令牌
+         * @param refreshToken 可选的刷新令牌
+         */
+        setToken(token: string, refreshToken?: string) {
+            this.token = token;
+            
+            // [已修改] 如果提供了刷新令牌，也保存它到sessionStorage
+            if (refreshToken) {
+                this.refreshToken = refreshToken;
+                sessionStorage.setItem('refreshToken', refreshToken);
+            }
+            
+            // [已修改] 使用sessionStorage而非localStorage，确保每个标签页状态独立
+            sessionStorage.setItem('token', token);
+        },
+
+        /**
+         * 获取访问令牌
+         * [已修改] 从sessionStorage获取令牌，确保标签页状态独立
+         * @returns 当前访问令牌
+         */
+        getToken(): string {
+            // [已修改] 如果内存中没有令牌，尝试从sessionStorage读取
+            if (!this.token) {
+                this.token = sessionStorage.getItem('token') || '';
+            }
+            return this.token;
+        },
+        
+        /**
+         * 获取刷新令牌
+         * [已修改] 从sessionStorage获取刷新令牌
+         * @returns 当前刷新令牌
+         */
+        getRefreshToken(): string {
+            if (!this.refreshToken) {
+                this.refreshToken = sessionStorage.getItem('refreshToken') || '';
+            }
+            return this.refreshToken;
+        },
+
+        /**
+         * 清除用户信息
+         * [已修改] 确保清除所有sessionStorage中的令牌
+         */
         clearUserInfo() {
             this.$patch({
                 id: '',
@@ -39,23 +96,56 @@ export const useUserStore = defineStore('user', {
                 profile_picture: '',
                 repos: [],
                 collaborations: [],
-                isLoggedIn: false
+                isLoggedIn: false,
+                token: '',
+                refreshToken: ''
             });
+            // [已修改] 清除所有存储，从sessionStorage中移除令牌
+            sessionStorage.removeItem('refreshToken');
+            sessionStorage.removeItem('token');
             sessionStorage.removeItem('user');
         },
 
-        // 更新用户仓库列表
+        /**
+         * 更新用户仓库列表
+         * @param repos 新的仓库列表
+         */
         updateRepos(repos: string[]) {
             this.$patch({
                 repos: repos
             });
-            sessionStorage.setItem('user', JSON.stringify({ id: this.id, username: this.username, email: this.email, profile_picture: this.profile_picture, repos: this.repos, collaborations: this.collaborations }))
+            // 更新session存储
+            const userData = {
+                id: this.id, 
+                username: this.username, 
+                email: this.email, 
+                profile_picture: this.profile_picture, 
+                repos: this.repos, 
+                collaborations: this.collaborations
+            };
+            sessionStorage.setItem('user', JSON.stringify(userData));
         },
 
-        // 从sessionStorage中获取用户信息
+        /**
+         * 从本地存储加载用户数据
+         * [已修改] 仅从sessionStorage加载数据，确保标签页状态独立
+         */
         localStorageUserData() {
+            // [已修改] 尝试从sessionStorage恢复令牌
+            const token = sessionStorage.getItem('token');
+            if (token) {
+                this.token = token;
+            }
+            
+            // [已修改] 尝试从sessionStorage获取刷新令牌
+            const refreshToken = sessionStorage.getItem('refreshToken');
+            if (refreshToken) {
+                this.refreshToken = refreshToken;
+            }
+            
+            // 从sessionStorage获取用户信息
             const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
-            if (userData) {
+            if (userData && Object.keys(userData).length > 0) {
                 this.setUserInfo(userData);
             }
         }
