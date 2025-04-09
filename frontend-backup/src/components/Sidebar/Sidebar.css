@@ -1,0 +1,49 @@
+.sidebar {
+  width: 240px;
+  background-color: #1e1e1e;
+  padding: 10px;
+  color: #ffffff;
+}
+
+.current-repo-files,
+.current-repo-result,
+.history-repo {
+  margin-bottom: 20px;
+}
+
+.sidebar-repo-item {
+  min-height: 30px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+.sidebar-repo-item:hover {
+  background-color: #3a3d3f; /* VSCode 悬停效果 */
+}
+
+.no-history {
+  padding: 8px 12px;
+  color: #cccccc; /* 提示文字颜色 */
+  text-align: center; /* 居中显示 */
+  font-size: 14px; /* 字体大小 */
+  border-radius: 4px; /* 圆角 */
+  background-color: #1e1e1e; /* 背景色 */
+}
+
+.file-list {
+  flex: 1;
+  flex-direction: column;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.no-files {
+  padding: 8px 12px;
+  color: #cccccc; /* 提示文字颜色 */
+  text-align: center; /* 居中显示 */
+  font-size: 14px; /* 字体大小 */
+  background-color: #1e1e1e;
+}

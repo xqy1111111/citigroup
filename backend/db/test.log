@@ -1,0 +1,80 @@
+Process Python exited abnormally with code 1
+Python 3.12.8 (main, Dec  3 2024, 18:42:41) [GCC 13.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> 
+>>> create_user("test", "test@example.com", "123456")
+'67b832499a0a16de62e49f71'
+>>> authenticate_user("test", "123456")
+'67b832499a0a16de62e49f71'
+>>> authenticate_user("test@example.com", "123456")
+'67b832499a0a16de62e49f71'
+>>> get_user_by_id('67b832499a0a16de62e49f71')
+{'_id': ObjectId('67b832499a0a16de62e49f71'), 'username': 'test', 'email': 'test@example.com', 'password_hash': '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'profile_picture': None, 'repos': [], 'collaborations': []}
+>>> exit
+Use exit() or Ctrl-D (i.e. EOF) to exit
+>>> 
+
+Process Python finished
+Python 3.12.8 (main, Dec  3 2024, 18:42:41) [GCC 13.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> 
+>>> create_repo('67b832499a0a16de62e49f71', "boom-first-repo", "okay just a test")
+'67b836928089095f3e735eaf'
+>>> create_repo('67b832499a0a16de62e49f71', "boom-first-repo", "okay just next test")
+>>> create_repo('67b832499a0a16de62e49f70', "boom-first-repo", "okay just a test")
+>>> update_repo_name('67b836928089095f3e735eaf', "boom-lets-change-repo-name")
+'success'
+>>> update_repo_desc('67b836928089095f3e735eaf', "i'm gonna change the desc hhh")
+'success'
+>>> get_repo_by_id('67b836928089095f3e735eaf')
+{'_id': ObjectId('67b836928089095f3e735eaf'), 'name': 'boom-lets-change-repo-name', 'owner_id': ObjectId('67b832499a0a16de62e49f71'), 'desc': "i'm gonna change the desc hhh", 'collaborators': [], 'files': []}
+
+
+Python 3.12.8 (main, Dec  3 2024, 18:42:41) [GCC 13.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> 
+>>> delete_repo('67b836928089095f3e735eaf')
+'success'
+>>> create_repo('67b832499a0a16de62e49f71', "boom-first-repo", "okay just a test")
+'67b83c4de8d597b8c6593a70'
+>>> get_user_by_id('67b832499a0a16de62e49f71')
+{'_id': ObjectId('67b832499a0a16de62e49f71'), 'username': 'test', 'email': 'test@example.com', 'password_hash': '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 'profile_picture': None, 'repos': [ObjectId('67b83c4de8d597b8c6593a70')], 'collaborations': []}
+
+
+import os
+>>> current_dir = os.getcwd()
+>>> filepath = os.path.join(current_dir, "test.log")
+>>> print(filepath)
+/home/happytech/project/whale-guard/citigroup/backend/db/test.log
+>>> with open(filepath, "rb") as f:
+...     fileid = upload_file('67b83c4de8d597b8c6593a70', f, "test.log")
+... 
+>>> print(fileid)
+67b8469f9ded124f7104a028
+
+
+get_file_metadata_by_id('67b8469f9ded124f7104a028')
+{'file_id': '67b8469f9ded124f7104a028', 'filename': 'test.log', 'length': 2268, 'upload_date': datetime.datetime(2025, 2, 21, 9, 25, 51, 551000)}
+
+
+>>> filename, filecontent = download_file('67b8469f9ded124f7104a028')
+>>> print(filename)
+test.log
+>>> print(len(filecontent))
+2268
+
+
+get_file_metadata_by_id('67b83c4de8d597b8c6593a70', '67b8469f9ded124f7104a028')
+{'file_id': '67b8469f9ded124f7104a028', 'filename': 'test.log', 'size': 2268, 'upload_date': datetime.datetime(2025, 2, 21, 9, 25, 51, 552000), 'status': 'unknown'}
+>>> get_file_metadata_by_id('67b83c4de8d597b8c6593a70', '67b8469f9ded124f7104a027')
+文件 67b8469f9ded124f7104a027 不存在于 repo 67b83c4de8d597b8c6593a70
+
+
+update_file_status('67b83c4de8d597b8c6593a70', '67b8469f9ded124f7104a027')
+文件 67b8469f9ded124f7104a027 不存在于 repo 67b83c4de8d597b8c6593a70
+'not found'
+>>> update_file_status('67b83c4de8d597b8c6593a70', '67b8469f9ded124f7104a028')
+文件 67b8469f9ded124f7104a028 状态更新为 complete
+'success'
+>>> get_file_metadata_by_id('67b83c4de8d597b8c6593a70', '67b8469f9ded124f7104a028')
+{'file_id': '67b8469f9ded124f7104a028', 'filename': 'test.log', 'size': 2268, 'upload_date': datetime.datetime(2025, 2, 21, 9, 25, 51, 552000), 'status': 'complete'}

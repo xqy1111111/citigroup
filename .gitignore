@@ -1,0 +1,66 @@
+# nix flake lock
+flake.lock
+
+# Python虚拟环境
+env/
+venv/
+.env
+.venv/
+ENV/
+ENV_DIR
+.envrc
+.direnv/
+
+# Python缓存文件
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+**/.pytest_cache/
+
+# IDE配置文件
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+
+# 数据库文件
+*.sqlite3
+*.db
+
+# 前端相关
+node_modules/
+dist/
+.next/
+.nuxt/
+.cache/
+build/
+
+# 环境配置文件
+.env.local
+.env.development
+.env.test
+.env.production
+
+# 其他
+*.bak
+*.tmp
+*.temp
+
+
+# Add the following directories to the ignore list
+backend/services/DataStructuring/DataStructuring/SourceCache/*
+backend/services/DataStructuring/DataStructuring/JsonData/*
+backend/services/DataStructuring/DataStructuring/SourceData/*
+backend/services/DataStructuring/DataStructuring/TextData/*
+backend/services/DataStructuring/DataStructuring/TargetData/*
+backend/services/risk_prediction/SourceData/*
+backend/services/DataStructuring/DataStructuring/InputData_for_ShenZijun/
